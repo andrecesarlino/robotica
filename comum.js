@@ -180,11 +180,15 @@ function recorde(id, pontos) {
 // Bip pelo computador, só quando testa pelo teclado (com Arduino quem toca é o buzzer)
 let audio;
 function bipTeste(freq, ms = 120) {
-  if (Arduino.escritor) return;
+  if (!Arduino.escritor) som(freq, ms);
+}
+// Som pelo computador, toca mesmo com o Arduino conectado.
+function som(freq, ms = 120, volume = 0.05, tipo = 'sine') {
   audio = audio || new AudioContext();
   const o = audio.createOscillator(), g = audio.createGain();
+  o.type = tipo;
   o.frequency.value = freq;
-  g.gain.value = 0.05;
+  g.gain.value = volume;
   o.connect(g).connect(audio.destination);
   o.start();
   o.stop(audio.currentTime + ms / 1000);
