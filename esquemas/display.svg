@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
 <rect width="1200" height="800" fill="#f4f6f8"/>
-<text x="30" y="45" font-size="26" fill="#222" font-family="Arial, sans-serif" font-weight="bold">Display 0 a 9 com o CI 4511</text>
+<text x="30" y="45" font-size="26" fill="#222" font-family="Arial, sans-serif" font-weight="bold">Display 0 a 9: display de 7 segmentos com 1 resistor no comum</text>
 <rect x="540" y="110" width="560" height="345" rx="8" fill="#e9e9e9" stroke="#bbb" stroke-width="2"/>
 <line x1="555" y1="123" x2="1085" y2="123" stroke="#d33" stroke-width="2"/>
 <line x1="555" y1="165" x2="1085" y2="165" stroke="#33d" stroke-width="2"/>
@@ -484,62 +484,42 @@
 <text x="360" y="716" font-size="9" fill="#fff" font-family="Arial" text-anchor="start" transform="rotate(-90 360 716)">A4</text>
 <rect x="370" y="723" width="10" height="10" fill="#111"/>
 <text x="375" y="716" font-size="9" fill="#fff" font-family="Arial" text-anchor="start" transform="rotate(-90 375 716)">A5</text>
-<rect x="589" y="258" width="144" height="46" rx="4" fill="#222" stroke="#000" stroke-width="2"/>
-<text x="661.0" y="286.0" font-size="13" fill="#fff" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">CI 4511</text>
-<text x="598" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">5V</text>
-<text x="616" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">f</text>
-<text x="634" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">g</text>
-<text x="652" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">a</text>
-<text x="670" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">b</text>
-<text x="688" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">c</text>
-<text x="706" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">d</text>
-<text x="724" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">e</text>
-<text x="598" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">B</text>
-<text x="616" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">C</text>
-<text x="634" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">LT</text>
-<text x="652" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">BL</text>
-<text x="670" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">LE</text>
-<text x="688" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">D</text>
-<text x="706" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">A</text>
-<text x="724" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">GND</text>
-<rect x="877" y="258" width="90" height="46" rx="4" fill="#333" stroke="#000" stroke-width="2"/>
-<text x="922.0" y="286.0" font-size="13" fill="#fff" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">8</text>
-<text x="886" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">g</text>
-<text x="904" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">f</text>
-<text x="922" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">C</text>
-<text x="940" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">a</text>
-<text x="958" y="253" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">b</text>
-<text x="886" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">e</text>
-<text x="904" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">d</text>
-<text x="922" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">C</text>
-<text x="940" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">c</text>
-<text x="958" y="317" font-size="10" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">.</text>
-<line x1="922" y1="190" x2="922" y2="153" stroke="#999" stroke-width="3"/>
-<rect x="915" y="159" width="14" height="26" rx="6" fill="#e3c99a" stroke="#8a6d3b" stroke-width="1.5"/>
-<rect x="915" y="163" width="14" height="3" fill="#f28c28"/>
-<rect x="915" y="169" width="14" height="3" fill="#111"/>
-<rect x="915" y="175" width="14" height="3" fill="#7a4a1e"/>
+<rect x="733" y="240" width="90" height="82" rx="4" fill="#222" stroke="#000" stroke-width="2"/>
+<line x1="765.0" y1="260.2" x2="791.0" y2="260.2" stroke="#ff3b3b" stroke-width="4" stroke-linecap="round"/>
+<line x1="791.0" y1="260.2" x2="791.0" y2="281.0" stroke="#ff3b3b" stroke-width="4" stroke-linecap="round"/>
+<line x1="791.0" y1="281.0" x2="791.0" y2="301.8" stroke="#ff3b3b" stroke-width="4" stroke-linecap="round"/>
+<line x1="765.0" y1="301.8" x2="791.0" y2="301.8" stroke="#ff3b3b" stroke-width="4" stroke-linecap="round"/>
+<line x1="765.0" y1="281.0" x2="765.0" y2="301.8" stroke="#ff3b3b" stroke-width="4" stroke-linecap="round"/>
+<line x1="765.0" y1="260.2" x2="765.0" y2="281.0" stroke="#ff3b3b" stroke-width="4" stroke-linecap="round"/>
+<line x1="765.0" y1="281.0" x2="791.0" y2="281.0" stroke="#ff3b3b" stroke-width="4" stroke-linecap="round"/>
+<text x="725" y="267" font-size="14" fill="#222" text-anchor="end" font-family="Arial, sans-serif" font-weight="bold">Display</text>
+<text x="742" y="234" font-size="13" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">g</text>
+<text x="760" y="234" font-size="13" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">f</text>
+<text x="778" y="234" font-size="13" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">C</text>
+<text x="796" y="234" font-size="13" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">a</text>
+<text x="814" y="234" font-size="13" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">b</text>
+<text x="742" y="340" font-size="13" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">e</text>
+<text x="760" y="340" font-size="13" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">d</text>
+<text x="778" y="340" font-size="13" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">C</text>
+<text x="796" y="340" font-size="13" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">c</text>
+<text x="814" y="340" font-size="13" fill="#14262a" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">.</text>
+<line x1="778" y1="190" x2="778" y2="153" stroke="#999" stroke-width="3"/>
+<rect x="771" y="159" width="14" height="26" rx="6" fill="#e3c99a" stroke="#8a6d3b" stroke-width="1.5"/>
+<rect x="771" y="163" width="14" height="3" fill="#f28c28"/>
+<rect x="771" y="169" width="14" height="3" fill="#111"/>
+<rect x="771" y="175" width="14" height="3" fill="#7a4a1e"/>
 <path d="M225,728 C225,754.0 225,754.0 225,780 C225,780.0 500,780.0 500,780 C500,595.0 500,595.0 500,410 C500,410.0 562,410.0 562,410" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M225,728 C225,754.0 225,754.0 225,780 C225,780.0 500,780.0 500,780 C500,595.0 500,595.0 500,410 C500,410.0 562,410.0 562,410" fill="none" stroke="#d22" stroke-width="5" stroke-linecap="round"/><circle cx="225" cy="728" r="4" fill="#d22" stroke="#222"/><circle cx="562" cy="410" r="4" fill="#d22" stroke="#222"/>
 <path d="M240,728 C240,749.0 240,749.0 240,770 C240,770.0 515,770.0 515,770 C515,599.0 515,599.0 515,428 C515,428.0 580,428.0 580,428" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M240,728 C240,749.0 240,749.0 240,770 C240,770.0 515,770.0 515,770 C515,599.0 515,599.0 515,428 C515,428.0 580,428.0 580,428" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round"/><circle cx="240" cy="728" r="4" fill="#111" stroke="#222"/><circle cx="580" cy="428" r="4" fill="#111" stroke="#222"/>
 <path d="M1066,410 C1066,410.0 1112,410.0 1112,410 C1112,272.5 1112,272.5 1112,135 C1112,135.0 1066,135.0 1066,135" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M1066,410 C1066,410.0 1112,410.0 1112,410 C1112,272.5 1112,272.5 1112,135 C1112,135.0 1066,135.0 1066,135" fill="none" stroke="#d22" stroke-width="5" stroke-linecap="round"/><circle cx="1066" cy="410" r="4" fill="#d22" stroke="#222"/><circle cx="1066" cy="135" r="4" fill="#d22" stroke="#222"/>
 <path d="M1066,428 C1066,436.5 1126,436.5 1126,445 C1126,299.0 1126,299.0 1126,153 C1126,153.0 1066,153.0 1066,153" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M1066,428 C1066,436.5 1126,436.5 1126,445 C1126,299.0 1126,299.0 1126,153 C1126,153.0 1066,153.0 1066,153" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round"/><circle cx="1066" cy="428" r="4" fill="#111" stroke="#222"/><circle cx="1066" cy="153" r="4" fill="#111" stroke="#222"/>
-<path d="M598,190 C598,162.5 598,162.5 598,135" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M598,190 C598,162.5 598,162.5 598,135" fill="none" stroke="#d22" stroke-width="5" stroke-linecap="round"/><circle cx="598" cy="190" r="4" fill="#d22" stroke="#222"/><circle cx="598" cy="135" r="4" fill="#d22" stroke="#222"/>
-<path d="M724,372 C724,400.0 724,400.0 724,428" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M724,372 C724,400.0 724,400.0 724,428" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round"/><circle cx="724" cy="372" r="4" fill="#111" stroke="#222"/><circle cx="724" cy="428" r="4" fill="#111" stroke="#222"/>
-<path d="M634,372 C634,391.0 634,391.0 634,410" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M634,372 C634,391.0 634,391.0 634,410" fill="none" stroke="#d22" stroke-width="5" stroke-linecap="round"/><circle cx="634" cy="372" r="4" fill="#d22" stroke="#222"/><circle cx="634" cy="410" r="4" fill="#d22" stroke="#222"/>
-<path d="M652,372 C652,391.0 652,391.0 652,410" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M652,372 C652,391.0 652,391.0 652,410" fill="none" stroke="#d22" stroke-width="5" stroke-linecap="round"/><circle cx="652" cy="372" r="4" fill="#d22" stroke="#222"/><circle cx="652" cy="410" r="4" fill="#d22" stroke="#222"/>
-<path d="M670,372 C670,400.0 670,400.0 670,428" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M670,372 C670,400.0 670,400.0 670,428" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round"/><circle cx="670" cy="372" r="4" fill="#111" stroke="#222"/><circle cx="670" cy="428" r="4" fill="#111" stroke="#222"/>
-<path d="M634,208 C634,164.0 634,164.0 634,120 C634,120.0 886,120.0 886,120 C886,164.0 886,164.0 886,208" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M634,208 C634,164.0 634,164.0 634,120 C634,120.0 886,120.0 886,120 C886,164.0 886,164.0 886,208" fill="none" stroke="#e84393" stroke-width="5" stroke-linecap="round"/><circle cx="634" cy="208" r="4" fill="#e84393" stroke="#222"/><circle cx="886" cy="208" r="4" fill="#e84393" stroke="#222"/>
-<path d="M616,208 C616,168.5 616,168.5 616,129 C616,129.0 904,129.0 904,129 C904,168.5 904,168.5 904,208" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M616,208 C616,168.5 616,168.5 616,129 C616,129.0 904,129.0 904,129 C904,168.5 904,168.5 904,208" fill="none" stroke="#8e44ad" stroke-width="5" stroke-linecap="round"/><circle cx="616" cy="208" r="4" fill="#8e44ad" stroke="#222"/><circle cx="904" cy="208" r="4" fill="#8e44ad" stroke="#222"/>
-<path d="M652,208 C652,173.0 652,173.0 652,138 C652,138.0 940,138.0 940,138 C940,173.0 940,173.0 940,208" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M652,208 C652,173.0 652,173.0 652,138 C652,138.0 940,138.0 940,138 C940,173.0 940,173.0 940,208" fill="none" stroke="#d22" stroke-width="5" stroke-linecap="round"/><circle cx="652" cy="208" r="4" fill="#d22" stroke="#222"/><circle cx="940" cy="208" r="4" fill="#d22" stroke="#222"/>
-<path d="M670,208 C670,177.5 670,177.5 670,147 C670,147.0 958,147.0 958,147 C958,177.5 958,177.5 958,208" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M670,208 C670,177.5 670,177.5 670,147 C670,147.0 958,147.0 958,147 C958,177.5 958,177.5 958,208" fill="none" stroke="#f39c12" stroke-width="5" stroke-linecap="round"/><circle cx="670" cy="208" r="4" fill="#f39c12" stroke="#222"/><circle cx="958" cy="208" r="4" fill="#f39c12" stroke="#222"/>
-<path d="M724,226 C724,158.0 728,158.0 728,90 C728,90.0 994,90.0 994,90 C994,246.0 994,246.0 994,402 C994,402.0 886,402.0 886,402 C886,378.0 886,378.0 886,354" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M724,226 C724,158.0 728,158.0 728,90 C728,90.0 994,90.0 994,90 C994,246.0 994,246.0 994,402 C994,402.0 886,402.0 886,402 C886,378.0 886,378.0 886,354" fill="none" stroke="#2f6fd6" stroke-width="5" stroke-linecap="round"/><circle cx="724" cy="226" r="4" fill="#2f6fd6" stroke="#222"/><circle cx="886" cy="354" r="4" fill="#2f6fd6" stroke="#222"/>
-<path d="M706,226 C706,162.5 710,162.5 710,99 C710,99.0 1002,99.0 1002,99 C1002,250.5 1002,250.5 1002,402 C1002,402.0 904,402.0 904,402 C904,378.0 904,378.0 904,354" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M706,226 C706,162.5 710,162.5 710,99 C710,99.0 1002,99.0 1002,99 C1002,250.5 1002,250.5 1002,402 C1002,402.0 904,402.0 904,402 C904,378.0 904,378.0 904,354" fill="none" stroke="#2e9e44" stroke-width="5" stroke-linecap="round"/><circle cx="706" cy="226" r="4" fill="#2e9e44" stroke="#222"/><circle cx="904" cy="354" r="4" fill="#2e9e44" stroke="#222"/>
-<path d="M688,226 C688,167.0 692,167.0 692,108 C692,108.0 1010,108.0 1010,108 C1010,255.0 1010,255.0 1010,402 C1010,402.0 940,402.0 940,402 C940,378.0 940,378.0 940,354" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M688,226 C688,167.0 692,167.0 692,108 C692,108.0 1010,108.0 1010,108 C1010,255.0 1010,255.0 1010,402 C1010,402.0 940,402.0 940,402 C940,378.0 940,378.0 940,354" fill="none" stroke="#f1c40f" stroke-width="5" stroke-linecap="round"/><circle cx="688" cy="226" r="4" fill="#f1c40f" stroke="#222"/><circle cx="940" cy="354" r="4" fill="#f1c40f" stroke="#222"/>
-<path d="M706,372 C706,412.0 706,412.0 706,452 C706,452.0 395,452.0 395,452 C395,472.0 395,472.0 395,492" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M706,372 C706,412.0 706,412.0 706,452 C706,452.0 395,452.0 395,452 C395,472.0 395,472.0 395,492" fill="none" stroke="#d22" stroke-width="5" stroke-linecap="round"/><circle cx="706" cy="372" r="4" fill="#d22" stroke="#222"/><circle cx="395" cy="492" r="4" fill="#d22" stroke="#222"/>
-<path d="M598,372 C598,415.5 598,415.5 598,459 C598,459.0 380,459.0 380,459 C380,475.5 380,475.5 380,492" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M598,372 C598,415.5 598,415.5 598,459 C598,459.0 380,459.0 380,459 C380,475.5 380,475.5 380,492" fill="none" stroke="#f39c12" stroke-width="5" stroke-linecap="round"/><circle cx="598" cy="372" r="4" fill="#f39c12" stroke="#222"/><circle cx="380" cy="492" r="4" fill="#f39c12" stroke="#222"/>
-<path d="M616,372 C616,419.0 616,419.0 616,466 C616,466.0 365,466.0 365,466 C365,479.0 365,479.0 365,492" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M616,372 C616,419.0 616,419.0 616,466 C616,466.0 365,466.0 365,466 C365,479.0 365,479.0 365,492" fill="none" stroke="#f1c40f" stroke-width="5" stroke-linecap="round"/><circle cx="616" cy="372" r="4" fill="#f1c40f" stroke="#222"/><circle cx="365" cy="492" r="4" fill="#f1c40f" stroke="#222"/>
-<path d="M688,372 C688,422.5 688,422.5 688,473 C688,473.0 350,473.0 350,473 C350,482.5 350,482.5 350,492" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M688,372 C688,422.5 688,422.5 688,473 C688,473.0 350,473.0 350,473 C350,482.5 350,482.5 350,492" fill="none" stroke="#2e9e44" stroke-width="5" stroke-linecap="round"/><circle cx="688" cy="372" r="4" fill="#2e9e44" stroke="#222"/><circle cx="350" cy="492" r="4" fill="#2e9e44" stroke="#222"/>
-<rect x="620" y="500" width="560" height="232" rx="10" fill="#fff" stroke="#ccc" stroke-width="2"/>
+<path d="M742,208 C742,134.0 742,134.0 742,60 C742,60.0 490,60.0 490,60 C490,261.0 490,261.0 490,462 C490,462.0 290,462.0 290,462 C290,477.0 290,477.0 290,492" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M742,208 C742,134.0 742,134.0 742,60 C742,60.0 490,60.0 490,60 C490,261.0 490,261.0 490,462 C490,462.0 290,462.0 290,462 C290,477.0 290,477.0 290,492" fill="none" stroke="#e84393" stroke-width="5" stroke-linecap="round"/><circle cx="742" cy="208" r="4" fill="#e84393" stroke="#222"/><circle cx="290" cy="492" r="4" fill="#e84393" stroke="#222"/>
+<path d="M760,208 C760,139.0 760,139.0 760,70 C760,70.0 481,70.0 481,70 C481,269.0 481,269.0 481,468 C481,468.0 320,468.0 320,468 C320,480.0 320,480.0 320,492" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M760,208 C760,139.0 760,139.0 760,70 C760,70.0 481,70.0 481,70 C481,269.0 481,269.0 481,468 C481,468.0 320,468.0 320,468 C320,480.0 320,480.0 320,492" fill="none" stroke="#8e44ad" stroke-width="5" stroke-linecap="round"/><circle cx="760" cy="208" r="4" fill="#8e44ad" stroke="#222"/><circle cx="320" cy="492" r="4" fill="#8e44ad" stroke="#222"/>
+<path d="M796,208 C796,144.0 796,144.0 796,80 C796,80.0 472,80.0 472,80 C472,277.0 472,277.0 472,474 C472,474.0 395,474.0 395,474 C395,483.0 395,483.0 395,492" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M796,208 C796,144.0 796,144.0 796,80 C796,80.0 472,80.0 472,80 C472,277.0 472,277.0 472,474 C472,474.0 395,474.0 395,474 C395,483.0 395,483.0 395,492" fill="none" stroke="#d22" stroke-width="5" stroke-linecap="round"/><circle cx="796" cy="208" r="4" fill="#d22" stroke="#222"/><circle cx="395" cy="492" r="4" fill="#d22" stroke="#222"/>
+<path d="M814,208 C814,149.0 814,149.0 814,90 C814,90.0 463,90.0 463,90 C463,285.0 463,285.0 463,480 C463,480.0 380,480.0 380,480 C380,486.0 380,486.0 380,492" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M814,208 C814,149.0 814,149.0 814,90 C814,90.0 463,90.0 463,90 C463,285.0 463,285.0 463,480 C463,480.0 380,480.0 380,480 C380,486.0 380,486.0 380,492" fill="none" stroke="#f39c12" stroke-width="5" stroke-linecap="round"/><circle cx="814" cy="208" r="4" fill="#f39c12" stroke="#222"/><circle cx="380" cy="492" r="4" fill="#f39c12" stroke="#222"/>
+<path d="M742,372 C742,406.0 742,406.0 742,440 C742,440.0 335,440.0 335,440 C335,466.0 335,466.0 335,492" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M742,372 C742,406.0 742,406.0 742,440 C742,440.0 335,440.0 335,440 C335,466.0 335,466.0 335,492" fill="none" stroke="#2f6fd6" stroke-width="5" stroke-linecap="round"/><circle cx="742" cy="372" r="4" fill="#2f6fd6" stroke="#222"/><circle cx="335" cy="492" r="4" fill="#2f6fd6" stroke="#222"/>
+<path d="M760,372 C760,409.0 760,409.0 760,446 C760,446.0 350,446.0 350,446 C350,469.0 350,469.0 350,492" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M760,372 C760,409.0 760,409.0 760,446 C760,446.0 350,446.0 350,446 C350,469.0 350,469.0 350,492" fill="none" stroke="#2e9e44" stroke-width="5" stroke-linecap="round"/><circle cx="760" cy="372" r="4" fill="#2e9e44" stroke="#222"/><circle cx="350" cy="492" r="4" fill="#2e9e44" stroke="#222"/>
+<path d="M796,372 C796,412.0 796,412.0 796,452 C796,452.0 365,452.0 365,452 C365,472.0 365,472.0 365,492" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round" opacity=".35"/><path d="M796,372 C796,412.0 796,412.0 796,452 C796,452.0 365,452.0 365,452 C365,472.0 365,472.0 365,492" fill="none" stroke="#f1c40f" stroke-width="5" stroke-linecap="round"/><circle cx="796" cy="372" r="4" fill="#f1c40f" stroke="#222"/><circle cx="365" cy="492" r="4" fill="#f1c40f" stroke="#222"/>
+<rect x="620" y="500" width="560" height="180" rx="10" fill="#fff" stroke="#ccc" stroke-width="2"/>
 <text x="640" y="532" font-size="18" fill="#222" font-family="Arial" font-weight="bold">Ligações</text>
 <line x1="640" y1="557" x2="675" y2="557" stroke="#d22" stroke-width="6" stroke-linecap="round"/>
 <text x="688" y="562" font-size="13" fill="#222" font-family="Arial" font-weight="bold">5V e GND do Arduino</text>
@@ -548,18 +528,12 @@
 <text x="688" y="588" font-size="13" fill="#222" font-family="Arial" font-weight="bold">Trilhos + e - de baixo</text>
 <text x="920" y="588" font-size="13" fill="#444" font-family="Arial">→ trilhos + e - de cima (direita)</text>
 <line x1="640" y1="609" x2="675" y2="609" stroke="#d22" stroke-width="6" stroke-linecap="round"/>
-<text x="688" y="614" font-size="13" fill="#222" font-family="Arial" font-weight="bold">4511 entradas A, B, C, D</text>
-<text x="920" y="614" font-size="13" fill="#444" font-family="Arial">→ pinos 2, 3, 4, 5 do Arduino</text>
-<line x1="640" y1="635" x2="675" y2="635" stroke="#8e44ad" stroke-width="6" stroke-linecap="round"/>
-<text x="688" y="640" font-size="13" fill="#222" font-family="Arial" font-weight="bold">4511 saídas a até g</text>
-<text x="920" y="640" font-size="13" fill="#444" font-family="Arial">→ segmentos a até g do display</text>
-<line x1="640" y1="661" x2="675" y2="661" stroke="#d22" stroke-width="6" stroke-linecap="round"/>
-<text x="688" y="666" font-size="13" fill="#222" font-family="Arial" font-weight="bold">4511 5V, LT e BL</text>
-<text x="920" y="666" font-size="13" fill="#444" font-family="Arial">→ 5V (trilho +)</text>
-<line x1="640" y1="687" x2="675" y2="687" stroke="#111" stroke-width="6" stroke-linecap="round"/>
-<text x="688" y="692" font-size="13" fill="#222" font-family="Arial" font-weight="bold">4511 GND e LE</text>
-<text x="920" y="692" font-size="13" fill="#444" font-family="Arial">→ GND (trilho -)</text>
-<line x1="640" y1="713" x2="675" y2="713" stroke="#111" stroke-width="6" stroke-linecap="round"/>
-<text x="688" y="718" font-size="13" fill="#222" font-family="Arial" font-weight="bold">Display comum (C)</text>
-<text x="920" y="718" font-size="13" fill="#444" font-family="Arial">→ resistor 300Ω ao trilho - de cima</text>
+<text x="688" y="614" font-size="13" fill="#222" font-family="Arial" font-weight="bold">Segmentos a, b, c, d</text>
+<text x="920" y="614" font-size="13" fill="#444" font-family="Arial">→ pinos 2, 3, 4, 5</text>
+<line x1="640" y1="635" x2="675" y2="635" stroke="#2f6fd6" stroke-width="6" stroke-linecap="round"/>
+<text x="688" y="640" font-size="13" fill="#222" font-family="Arial" font-weight="bold">Segmentos e, f, g</text>
+<text x="920" y="640" font-size="13" fill="#444" font-family="Arial">→ pinos 6, 7, 8</text>
+<line x1="640" y1="661" x2="675" y2="661" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+<text x="688" y="666" font-size="13" fill="#222" font-family="Arial" font-weight="bold">Comum (C, pino do meio)</text>
+<text x="920" y="666" font-size="13" fill="#444" font-family="Arial">→ resistor 300Ω ao trilho - de cima</text>
 </svg>
