@@ -88,7 +88,7 @@ function montarPagina(j) {
         <li>Vá na aba <b>2. Jogar</b>, clique em <b>Conectar Arduino</b> e escolha a porta.</li>
         ${(j.passosExtras || []).map(p => `<li>${p}</li>`).join('')}
       </ol>
-      ${j.tinkercad ? `<p>Circuito pronto no Tinkercad: <a href="${j.tinkercad}" target="_blank">abrir</a></p>` : ''}
+      ${j.tinkercad ? `<p>Circuito pronto no Tinkercad: <a href="${j.tinkercad}" target="_blank">abrir</a>. Lá dá para simular e testar pelo Monitor Serial; a tela do jogo só conecta no Arduino de verdade.</p>` : ''}
     </section>
     <section class="caixa largo codigo"><h2>Código do Arduino</h2>
       <button id="copiar">Copiar código</button>
