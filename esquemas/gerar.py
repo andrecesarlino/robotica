@@ -5,7 +5,7 @@ Uso: python3 esquemas/gerar.py  -> cria um .svg por jogo nesta pasta
 import pathlib
 import sys
 
-sys.path.insert(0, "/mnt/dados/projetos/abandonado/radar-arduino/esquema")
+sys.path.insert(0, "/mnt/dados/projetos/arduino/radar-arduino/esquema")
 from gerar_esquemas import (aula3, col, hole, pin, rail_n, rail_p, ROW, VERM, PRETO, LARANJA,
                             AMARELO, VERDE, ROXO, AZUL, MARROM, CINZA)
 
@@ -164,42 +164,56 @@ def pescaria():
 
 
 def display():
-    """Display de 1 dígito no vão do meio. Pinos de cima (linha e): g f COM a b; de baixo (linha f): e d COM c DP.
-    Um resistor de 300Ω só, no comum, até o trilho - de cima."""
-    e = base("Display 0 a 9: display de 7 segmentos com 1 resistor no comum")
-    c = 10
-    x0, x1 = col(c) - 9, col(c + 4) + 9
-    e.add(f'<rect x="{x0}" y="{ROW["d"] - 4}" width="{x1 - x0}" height="{ROW["g"] - ROW["d"] + 8}" rx="4" fill="#222" stroke="#000" stroke-width="2"/>')
-    # segmentos desenhados em cima do corpo
-    mx, my, a = (x0 + x1) / 2, (ROW["e"] + ROW["f"]) / 2, 13
-    for x1s, y1s, x2s, y2s in ((-a, -2 * a, a, -2 * a), (a, -2 * a, a, 0), (a, 0, a, 2 * a), (-a, 2 * a, a, 2 * a),
-                               (-a, 0, -a, 2 * a), (-a, -2 * a, -a, 0), (-a, 0, a, 0)):
-        e.add(f'<line x1="{mx + x1s}" y1="{my + y1s * 0.8}" x2="{mx + x2s}" y2="{my + y2s * 0.8}" stroke="#ff3b3b" stroke-width="4" stroke-linecap="round"/>')
-    e.text(x0 - 8, ROW["e"] + 5, "Display", 14, anchor="end")
-    for i, n in enumerate(["g", "f", "C", "a", "b"]):
-        e.text(col(c + i), ROW["d"] - 10, n, 13, "#14262a")
-    for i, n in enumerate(["e", "d", "C", "c", "."]):
-        e.text(col(c + i), ROW["g"] + 22, n, 13, "#14262a")
-    # resistor em pé do comum (coluna c+2, linha a) até o trilho - de cima
-    x, top_n = col(c + 2), 153
+    """Display de 1 dígito com o CI 4511. O Arduino manda o número em binário (A, B, C, D nos pinos 2 a 5)
+    e o 4511 acende os segmentos. Chip nas colunas 2-9 e display nas 18-22, os dois em cima do vão.
+    Um resistor de 300Ω só, no comum do display."""
+    e = base("Display 0 a 9 com o CI 4511")
+    def dip(c0, n, rotulo, cima, baixo, cor):
+        x0, x1 = col(c0) - 9, col(c0 + n - 1) + 9
+        e.add(f'<rect x="{x0}" y="{ROW["e"] - 4}" width="{x1 - x0}" height="{ROW["f"] - ROW["e"] + 8}" rx="4" fill="{cor}" stroke="#000" stroke-width="2"/>')
+        e.text((x0 + x1) / 2, (ROW["e"] + ROW["f"]) / 2 + 5, rotulo, 13, "#fff")
+        for i, t in enumerate(cima):
+            e.text(col(c0 + i), ROW["e"] - 9, t, 10, "#14262a")
+        for i, t in enumerate(baixo):
+            e.text(col(c0 + i), ROW["f"] + 17, t, 10, "#14262a")
+    # 4511: em cima (linha e) pinos 16 a 9, embaixo (linha f) pinos 1 a 8; chanfro à esquerda
+    dip(2, 8, "CI 4511", ["5V", "f", "g", "a", "b", "c", "d", "e"], ["B", "C", "LT", "BL", "LE", "D", "A", "GND"], "#222")
+    # display: em cima g f C a b, embaixo e d C c ponto
+    dip(18, 5, "8", ["g", "f", "C", "a", "b"], ["e", "d", "C", "c", "."], "#333")
+    # alimentação e pinos de controle do 4511
+    e.fio(hole(2, "a"), (col(2), 135), VERM)                      # 5V (pino 16) no + de cima
+    e.fio(hole(9, "j"), rail_n(9), PRETO)                          # GND (pino 8)
+    e.fio(hole(4, "j"), rail_p(4), VERM)                           # LT no 5V
+    e.fio(hole(5, "j"), rail_p(5), VERM)                           # BL no 5V
+    e.fio(hole(6, "j"), rail_n(6), PRETO)                          # LE no GND
+    # resistor do comum do display (coluna 20) até o trilho - de cima
+    x, top_n = col(20), 153
     e.perna(x, ROW["a"], x, top_n)
     e.add(f'<rect x="{x - 7}" y="{top_n + 6}" width="14" height="26" rx="6" fill="#e3c99a" stroke="#8a6d3b" stroke-width="1.5"/>')
     for i, cr in enumerate(["#f28c28", "#111", "#7a4a1e"]):
         e.add(f'<rect x="{x - 7}" y="{top_n + 10 + i * 6}" width="14" height="3" fill="{cr}"/>')
-    # segmentos de cima saem pela linha b, os de baixo pela linha j
+    # saídas do 4511 (metade de cima) até os segmentos do display
     cores = {"a": VERM, "b": LARANJA, "c": AMARELO, "d": VERDE, "e": AZUL, "f": ROXO, "g": ROSA}
-    pinos = {"a": "2", "b": "~3", "c": "4", "d": "~5", "e": "~6", "f": "7", "g": "8"}
-    topo = {"g": c, "f": c + 1, "a": c + 3, "b": c + 4}
-    baixo = {"e": c, "d": c + 1, "c": c + 3}
-    for k, (seg, cc) in enumerate(topo.items()):
-        y = 60 + 10 * k
-        e.fio(hole(cc, "b"), pin(pinos[seg]), cores[seg], via=[(col(cc), y), (490 - 9 * k, y), (490 - 9 * k, 462 + 6 * k), (pin(pinos[seg])[0], 462 + 6 * k)])
-    for k, (seg, cc) in enumerate(baixo.items()):
-        y = 440 + 6 * k
-        e.fio(hole(cc, "j"), pin(pinos[seg]), cores[seg], via=[(col(cc), y), (pin(pinos[seg])[0], y)])
-    e.legenda = e.legenda[:2] + [(VERM, "Segmentos a, b, c, d", "pinos 2, 3, 4, 5"),
-                                 (AZUL, "Segmentos e, f, g", "pinos 6, 7, 8"),
-                                 (PRETO, "Comum (C, pino do meio)", "resistor 300Ω ao trilho - de cima")]
+    saida = {"f": 3, "g": 4, "a": 5, "b": 6, "c": 7, "d": 8, "e": 9}
+    disp_cima = {"g": 18, "f": 19, "a": 21, "b": 22}
+    disp_baixo = {"e": 18, "d": 19, "c": 21}
+    for k, (seg, cc) in enumerate(disp_cima.items()):
+        y = ROW["a"] - 70 + 9 * k
+        e.fio(hole(saida[seg], "b"), hole(cc, "b"), cores[seg], via=[(col(saida[seg]), y), (col(cc), y)])
+    for k, (seg, cc) in enumerate(disp_baixo.items()):
+        y = ROW["a"] - 100 + 9 * k
+        xr = col(24) + 8 * k
+        e.fio(hole(saida[seg], "c"), hole(cc, "i"), cores[seg],
+              via=[(col(saida[seg]) + 4, y), (xr, y), (xr, ROW["j"] + 30), (col(cc), ROW["j"] + 30)])
+    # Arduino -> entradas A, B, C, D do 4511 (metade de baixo)
+    for k, (c, p, cor) in enumerate(((8, "2", VERM), (2, "~3", LARANJA), (3, "4", AMARELO), (7, "~5", VERDE))):
+        y = 452 + 7 * k
+        e.fio(hole(c, "j"), pin(p), cor, via=[(col(c), y), (pin(p)[0], y)])
+    e.legenda = e.legenda[:2] + [(VERM, "4511 entradas A, B, C, D", "pinos 2, 3, 4, 5 do Arduino"),
+                                 (ROXO, "4511 saídas a até g", "segmentos a até g do display"),
+                                 (VERM, "4511 5V, LT e BL", "5V (trilho +)"),
+                                 (PRETO, "4511 GND e LE", "GND (trilho -)"),
+                                 (PRETO, "Display comum (C)", "resistor 300Ω ao trilho - de cima")]
     return e
 
 

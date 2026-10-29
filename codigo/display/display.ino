@@ -1,35 +1,21 @@
-//## Os pinos | Os 7 segmentos (a até g) ficam numa lista, nos pinos 2 a 8.
-// Display de 7 segmentos contando de 0 a 9, um número por segundo.
-// Cada segmento é um LED; a tabela NUMEROS diz quais acendem em cada número.
+// Display de 7 segmentos com o CI 4511 contando de 0 a 9, um número por segundo.
+// O Arduino manda o número em binário por 4 fios (A, B, C, D) e o 4511
+// acende os segmentos certos sozinho.
 
-const int SEGMENTOS[7] = {2, 3, 4, 5, 6, 7, 8};  // pinos dos segmentos a, b, c, d, e, f, g
-const bool CATODO_COMUM = true;  // troque para false se o pino comum do seu display vai no 5V
+const int PINO_A = 2;  // bit que vale 1
+const int PINO_B = 3;  // bit que vale 2
+const int PINO_C = 4;  // bit que vale 4
+const int PINO_D = 5;  // bit que vale 8
 
-// 1 = aceso, 0 = apagado, na ordem a, b, c, d, e, f, g
-//## A tabela dos números | Uma linha por número: 1 acende o segmento, 0 apaga.
-const int NUMEROS[10][7] = {
-  {1, 1, 1, 1, 1, 1, 0},  // 0
-  {0, 1, 1, 0, 0, 0, 0},  // 1
-  {1, 1, 0, 1, 1, 0, 1},  // 2
-  {1, 1, 1, 1, 0, 0, 1},  // 3
-  {0, 1, 1, 0, 0, 1, 1},  // 4
-  {1, 0, 1, 1, 0, 1, 1},  // 5
-  {1, 0, 1, 1, 1, 1, 1},  // 6
-  {1, 1, 1, 0, 0, 0, 0},  // 7
-  {1, 1, 1, 1, 1, 1, 1},  // 8
-  {1, 1, 1, 1, 0, 1, 1},  // 9
-};
-
-//## setup | Roda uma vez: os 7 pinos como saída.
 void setup()
 {
-  for (int i = 0; i < 7; i++) {
-    pinMode(SEGMENTOS[i], OUTPUT);
-  }
+  pinMode(PINO_A, OUTPUT);
+  pinMode(PINO_B, OUTPUT);
+  pinMode(PINO_C, OUTPUT);
+  pinMode(PINO_D, OUTPUT);
   Serial.begin(9600);
 }
 
-//## Contar de 0 a 9 | Mostra cada número por 1 segundo e manda o número para a tela.
 void loop()
 {
   for (int numero = 0; numero <= 9; numero++) {
@@ -39,14 +25,11 @@ void loop()
   }
 }
 
-//## Mostrar um número | Lê a linha do número na tabela e acende ou apaga cada segmento.
+// Exemplo: 6 em binário é 0110, então D=0, C=1, B=1, A=0
 void mostrar(int numero)
 {
-  for (int i = 0; i < 7; i++) {
-    int aceso = NUMEROS[numero][i];
-    if (!CATODO_COMUM) {
-      aceso = !aceso;  // no ânodo comum o segmento acende com LOW
-    }
-    digitalWrite(SEGMENTOS[i], aceso);
-  }
+  digitalWrite(PINO_A, bitRead(numero, 0));
+  digitalWrite(PINO_B, bitRead(numero, 1));
+  digitalWrite(PINO_C, bitRead(numero, 2));
+  digitalWrite(PINO_D, bitRead(numero, 3));
 }
