@@ -1,3 +1,4 @@
+//## Os pinos e as notas | Os 4 botões e as 4 notas ficam em listas: o botão 1 toca a nota 1, e assim por diante.
 // Jogo de ritmo: cada botão toca uma nota e avisa a tela qual coluna foi apertada.
 // A tela decide se foi na hora certa e manda a cor do LED.
 
@@ -8,8 +9,10 @@ const int LED_VERMELHO = 7;  // LED RGB
 const int LED_VERDE = 6;
 const int LED_AZUL = 5;
 
+//## Memória dos botões | Guarda se cada botão já estava apertado.
 bool antes[4] = {false, false, false, false};
 
+//## setup | Roda uma vez: os 4 botões como entrada, LED e buzzer como saída.
 void setup()
 {
   for (int i = 0; i < 4; i++) {
@@ -22,6 +25,7 @@ void setup()
   Serial.begin(9600);
 }
 
+//## Os 4 botões | Para cada botão: se acabou de apertar, manda B1 a B4 para a tela e toca a nota.
 void loop()
 {
   for (int i = 0; i < 4; i++) {
@@ -34,12 +38,14 @@ void loop()
     antes[i] = apertado;
   }
 
+//## Ouvir a tela | Lê as letras que a tela manda e passa para a função comando.
   while (Serial.available() > 0) {
     comando(Serial.read());
   }
   delay(10);
 }
 
+//## LED RGB | Acende as cores do LED: HIGH acende, LOW apaga.
 void cor(int vermelho, int verde, int azul)
 {
   digitalWrite(LED_VERMELHO, vermelho);
@@ -47,6 +53,7 @@ void cor(int vermelho, int verde, int azul)
   digitalWrite(LED_AZUL, azul);
 }
 
+//## O que cada letra faz | r vermelho (errou), g verde (acertou), b azul (perfeito), o apaga.
 void comando(char letra)
 {
   if (letra == 'r') cor(HIGH, LOW, LOW);   // errou

@@ -101,8 +101,9 @@ function montarPagina(j) {
     ${nav(2)}
   </main>
   <main class="passo" data-passo="3">
-    <p class="dica-codigo">Digite na Arduino IDE e envie para a placa. Depois <b>feche o Monitor Serial</b>, senão a página não conecta.</p>
-    <pre id="codigo">carregando...</pre>
+    <p class="dica-codigo">Digite as partes na ordem, uma embaixo da outra, na Arduino IDE. Depois envie para a placa e <b>feche o Monitor Serial</b>, senão a página não conecta.</p>
+    <div id="partes"></div>
+    <details class="inteiro"><summary>Ver o código inteiro</summary><pre id="codigo">carregando...</pre></details>
     ${nav(3)}
   </main>
   <section class="jogar passo" data-passo="4" id="jogar">
@@ -139,11 +140,26 @@ function montarPagina(j) {
   addEventListener('resize', ajustarTela);
 
   document.getElementById('conectar').onclick = conectar;
-  fetch(`codigo/${j.id}/${j.id}.ino`).then(r => r.text()).then(t => document.getElementById('codigo').textContent = t);
+  // O .ino tem linhas "//## Título | explicação" marcando o começo de cada parte
+  fetch(`codigo/${j.id}/${j.id}.ino`, { cache: 'no-cache' }).then(r => r.text()).then(t => {
+    const partes = [];
+    for (const linha of t.split('\n')) {
+      const m = linha.match(/^\/\/## (.*?) \| (.*)$/);
+      if (m) partes.push({ titulo: m[1], explica: m[2], linhas: [] });
+      else if (partes.length) partes[partes.length - 1].linhas.push(linha);
+    }
+    const limpo = l => l.join('\n').replace(/^\n+|\n+$/g, '');
+    const esc = x => x.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    document.getElementById('partes').innerHTML = partes.map((p, i) => `
+      <section class="parte"><div class="parte-topo"><span>${i + 1}</span><b>${p.titulo}</b><em>${p.explica}</em></div>
+      <pre>${esc(limpo(p.linhas))}</pre></section>`).join('');
+    document.getElementById('codigo').textContent = t.split('\n').filter(l => !l.startsWith('//##')).join('\n');
+  });
 
   // Teclado faz papel dos botões, só no passo Jogar
   addEventListener('keydown', e => {
     if (e.repeat || !j.teclas || !document.getElementById('jogar').classList.contains('ativo')) return;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;  // digitando o nome da equipe, por exemplo
     const linha = j.teclas[e.key.toLowerCase()];
     if (linha) { e.preventDefault(); Arduino.aoReceber(linha); }
   });

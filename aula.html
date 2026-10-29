@@ -97,7 +97,7 @@ function mostrar() {
   // o código só é baixado quando a pessoa abre o "Ver o código"
   el.querySelectorAll('details').forEach(d => d.addEventListener('toggle', () => {
     const pre = d.querySelector('pre');
-    if (d.open && pre.textContent === 'carregando...') fetch(pre.dataset.src).then(r => r.text()).then(t => pre.textContent = t);
+    if (d.open && pre.textContent === 'carregando...') fetch(pre.dataset.src, { cache: 'no-cache' }).then(r => r.text()).then(t => pre.textContent = t);
   }));
   scrollTo(0, 0);
 }

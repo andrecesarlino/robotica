@@ -1,3 +1,4 @@
+//## Os pinos | Um nome para cada pino. Se ligar uma peça em outro pino, mude só o número aqui.
 // Cabo de guerra: dois jogadores apertam o botão o mais rápido que conseguem.
 // Cada aperto vai para a tela (B1 jogador 1, B2 jogador 2); a tela puxa a corda
 // e manda de volta a cor de quem está ganhando.
@@ -9,9 +10,11 @@ const int LED_VERMELHO = 7;  // LED RGB
 const int LED_VERDE = 6;
 const int LED_AZUL = 5;
 
+//## Memória dos botões | Guarda se cada botão já estava apertado, para contar um aperto só uma vez.
 bool antes1 = false;
 bool antes2 = false;
 
+//## setup | Roda uma vez: botões como entrada, LED e buzzer como saída.
 void setup()
 {
   pinMode(BOTAO_1, INPUT_PULLUP);
@@ -23,6 +26,7 @@ void setup()
   Serial.begin(9600);
 }
 
+//## Botão do jogador 1 | Cada aperto manda B1: a corda anda para o lado do jogador 1.
 void loop()
 {
   bool b1 = digitalRead(BOTAO_1) == LOW;
@@ -31,6 +35,7 @@ void loop()
   }
   antes1 = b1;
 
+//## Botão do jogador 2 | Cada aperto manda B2. O delay de 15 evita contar um aperto duas vezes.
   bool b2 = digitalRead(BOTAO_2) == LOW;
   if (b2 && !antes2) {
     Serial.println("B2");
@@ -43,6 +48,7 @@ void loop()
   delay(15);  // espera o botão parar de tremer, senão um aperto conta duas vezes
 }
 
+//## LED RGB | Acende as cores do LED: HIGH acende, LOW apaga.
 void cor(int vermelho, int verde, int azul)
 {
   digitalWrite(LED_VERMELHO, vermelho);
@@ -50,6 +56,7 @@ void cor(int vermelho, int verde, int azul)
   digitalWrite(LED_AZUL, azul);
 }
 
+//## O que cada letra faz | r e b mostram quem está ganhando, t e a fazem a contagem, f toca o fim da rodada.
 void comando(char letra)
 {
   if (letra == 'r') cor(HIGH, LOW, LOW);       // jogador 1 ganhando

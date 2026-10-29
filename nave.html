@@ -34,7 +34,7 @@ montarPagina({
 const PERTO = 5, LONGE = 40;      // cm: faixa da mão
 let alvoY = 0.5, naveY = 0.5;     // 0 = em cima, 1 = embaixo
 let estado = 'parado';            // parado, jogando, fim
-let fimEm = 0;
+let fimEm = -1e9;
 let pontos = 0, vidas = 3, tempo = 0, piscar = 0;
 let asteroides = [], tiros = [], estrelas = [], explosoes = [];
 for (let i = 0; i < 120; i++) estrelas.push({ x: Math.random(), y: Math.random(), v: 0.02 + Math.random() * 0.08 });

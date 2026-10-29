@@ -41,7 +41,7 @@ main.passo h2 { font-size: 14px; color: var(--suave); text-transform: uppercase;
 .pecas { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .pecas li { background: #1d2740; border: 1px solid var(--borda); border-radius: 999px; padding: 3px 10px; font-size: 13px; }
 .dica-codigo { font-size: 13px; color: var(--suave); margin: 0 0 10px; }
-#codigo { background: #0a0f1a; border: 1px solid var(--borda); border-radius: 10px; padding: 14px; overflow: auto; max-height: 60vh; font-size: 12.5px; line-height: 1.45; margin: 0; }
+#codigo, .parte pre { background: #0a0f1a; border: 1px solid var(--borda); border-radius: 10px; padding: 14px; overflow: auto; max-height: 60vh; font-size: 12.5px; line-height: 1.45; margin: 0; }
 .navpasso { display: flex; justify-content: space-between; margin-top: 16px; }
 
 /* Passo Jogar */
@@ -60,3 +60,11 @@ main.passo h2 { font-size: 14px; color: var(--suave); text-transform: uppercase;
 .menu a:hover { color: var(--texto); background: var(--painel); }
 .menu a.ativo { color: #061224; background: var(--azul); }
 .menu .marca { color: var(--verde); font-family: 'Space Grotesk', Arial, sans-serif; font-size: 16px; margin-right: 10px; }
+
+.parte { margin-bottom: 12px; }
+.parte-topo { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; font-size: 13px; }
+.parte-topo span { width: 20px; height: 20px; border-radius: 50%; background: var(--azul); color: #061224; font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; flex: none; align-self: center; }
+.parte-topo b { font-size: 14px; }
+.parte-topo em { font-style: normal; color: var(--suave); }
+.parte pre { max-height: none !important; }
+.inteiro summary { cursor: pointer; color: var(--azul); font-size: 13px; font-weight: 600; margin: 4px 0 8px; }
