@@ -31,6 +31,7 @@ montarPagina({
 
 const DIGITOS = 4, TEMPO = 60, MULTA = 5;
 let estado = 'parado';   // parado, jogando, desarmou, explodiu
+musica([220, 0, 0, 233, 220, 0, 0, 0, 220, 0, 0, 262, 247, 0, 0, 0], () => estado === 'jogando', 180);
 let codigo = [], certos = 0, numero = 0, restante = TEMPO, proximoTique = 0;
 let dica = '', dicaT = 0, tentativas = 0, flash = 0, fimEm = 0, girar = 0;
 
@@ -52,16 +53,16 @@ function tentar() {
   tentativas++;
   if (numero === codigo[certos]) {
     certos++; dica = 'CERTO!'; dicaT = 1.2;
-    Arduino.enviar('a'); bipTeste(1300, 120);
+    Arduino.enviar('a'); som(1300, 120);
     if (certos === DIGITOS) {
       estado = 'desarmou'; fimEm = performance.now();
       recorde('bomba', Math.round(restante * 10));
-      Arduino.enviar('f'); ledDaTela('g'); bipTeste(1568, 400);
+      Arduino.enviar('f'); ledDaTela('g'); som(1568, 400);
     }
   } else {
     restante -= MULTA;
     dica = numero < codigo[certos] ? 'É MAIOR ▲' : 'É MENOR ▼'; dicaT = 2;
-    Arduino.enviar('e'); bipTeste(300, 250);
+    Arduino.enviar('e'); som(300, 250);
   }
 }
 
@@ -86,13 +87,13 @@ function quadro(agora) {
     restante -= dt;
     // tique-taque: 1 por segundo, 2 nos últimos 10 s, 4 nos últimos 5 s
     if (restante <= proximoTique) {
-      Arduino.enviar('t'); bipTeste(2000, 15);  // o 6 no Arduino já pisca o LED amarelo
+      Arduino.enviar('t'); som(2000, 15);  // o 6 no Arduino já pisca o LED amarelo
       ledDaTela('y'); setTimeout(() => ledDaTela('o'), 80);
       proximoTique -= restante > 10 ? 1 : restante > 5 ? 0.5 : 0.25;
     }
     if (restante <= 0) {
       restante = 0; estado = 'explodiu'; flash = 1.2; fimEm = performance.now();
-      Arduino.enviar('x'); ledDaTela('r'); bipTeste(80, 900);
+      Arduino.enviar('x'); ledDaTela('r'); som(80, 900);
     }
   }
   dicaT -= dt;

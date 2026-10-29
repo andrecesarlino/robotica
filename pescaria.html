@@ -36,6 +36,7 @@ montarPagina({
 
 const DURACAO = 60;
 let estado = 'parado', pontos = 0, restante = DURACAO, contagem = 0, fundo = null, bolas = [], equipe = '';
+musica([392, 0, 440, 0, 494, 0, 587, 0, 494, 0, 440, 0, 392, 0, 330, 0], () => estado === 'jogando', 220);
 let ranking = [];
 try { ranking = JSON.parse(localStorage.getItem('ranking-pescaria')) || []; } catch (e) {}
 
@@ -56,7 +57,7 @@ Arduino.aoReceber = linha => {
   if (linha === 'PONTO' && estado === 'jogando') {
     pontos++;
     bolas.push({ x: (Math.random() - 0.5) * 0.6, y: -1, vy: 0, cor: ['#ffd166', '#e8edf7', '#4ea8ff', '#ff9f1c'][pontos % 4] });
-    Arduino.enviar('a'); bipTeste(1500, 120);
+    Arduino.enviar('a'); som(1500, 120);
   }
 };
 
@@ -69,13 +70,13 @@ function quadro(agora) {
 
   if (estado === 'contagem') {
     const n = Math.ceil(contagem); contagem -= dt;
-    if (Math.ceil(contagem) < n && contagem > 0) { Arduino.enviar('t'); bipTeste(1000, 60); }
-    if (contagem <= 0) { estado = 'jogando'; Arduino.enviar('a'); bipTeste(1500, 200); }
+    if (Math.ceil(contagem) < n && contagem > 0) { Arduino.enviar('t'); som(1000, 60); }
+    if (contagem <= 0) { estado = 'jogando'; Arduino.enviar('a'); som(1500, 200); }
   }
   if (estado === 'jogando') {
     restante -= dt;
     if (restante <= 0) {
-      restante = 0; estado = 'fim'; Arduino.enviar('f'); bipTeste(440, 500);
+      restante = 0; estado = 'fim'; Arduino.enviar('f'); som(440, 500);
       ranking.push({ equipe, pontos });
       ranking.sort((a, b) => b.pontos - a.pontos);
       ranking = ranking.slice(0, 8);

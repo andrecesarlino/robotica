@@ -33,6 +33,7 @@ montarPagina({
 const PUXAO = 0.045;        // quanto cada aperto anda (1 = chegou na linha)
 const VERMELHO = '#ff5470', AZUL = '#4ea8ff';
 let estado = 'parado';      // parado, contagem, puxando, rodada, campeao
+musica([392, 392, 523, 0, 392, 392, 587, 0, 392, 392, 659, 587, 523, 0, 494, 0], () => estado === 'puxando', 150);
 let pos = 0, vitorias = [0, 0], contagem = 0, rodada = 0, liderAntes = '';
 let cliques = [[], []], ganhador = -1, tremer = 0, fimEm = 0;
 
@@ -53,7 +54,7 @@ function puxar(j) {
   if (Math.abs(pos) >= 1) {
     ganhador = pos < 0 ? 0 : 1;
     vitorias[ganhador]++;
-    Arduino.enviar('f'); bipTeste(988, 400);
+    Arduino.enviar('f'); som(988, 400);
     estado = vitorias[ganhador] >= 2 ? 'campeao' : 'rodada';
     if (estado === 'rodada') setTimeout(novaRodada, 2500);
     else { fimEm = performance.now(); recorde('cabo', 0); }
@@ -123,8 +124,8 @@ function quadro(agora) {
   if (estado === 'contagem') {
     const antesN = Math.ceil(contagem);
     contagem -= dt;
-    if (Math.ceil(contagem) < antesN && contagem > 0) { Arduino.enviar('t'); bipTeste(1000, 60); }
-    if (contagem <= 0) { estado = 'puxando'; Arduino.enviar('a'); Arduino.enviar('y'); bipTeste(1600, 300); }
+    if (Math.ceil(contagem) < antesN && contagem > 0) { Arduino.enviar('t'); som(1000, 60); }
+    if (contagem <= 0) { estado = 'puxando'; Arduino.enviar('a'); Arduino.enviar('y'); som(1600, 300); }
     texto(ctx, contagem > 3 ? 'Preparar...' : String(Math.ceil(contagem)), W / 2, H * 0.25, 90 * s, '#fff');
   }
   if (estado === 'puxando' && performance.now() % 1000 < 600 && cliques[0].length + cliques[1].length < 3) texto(ctx, 'JÁ!', W / 2, H * 0.25, 90 * s, '#3ddc84');

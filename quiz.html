@@ -55,6 +55,7 @@ const PERGUNTAS = [
 ];
 const POR_PARTIDA = 10, TEMPO = 10;
 let estado = 'parado', fila = [], atual = null, numero = 0, pontos = 0, acertos = 0;
+musica([523, 0, 659, 0, 784, 0, 659, 0, 587, 0, 698, 0, 880, 0, 698, 0], () => estado === 'jogando', 320);
 let restante = TEMPO, resposta = null, ultimoTique = 0, fimEm = 0;
 
 function comecar() {
@@ -76,9 +77,9 @@ function responder(letra) {
   resposta = letra;
   if (letra === atual.certa) {
     acertos++; pontos += 100 + Math.round(restante * 10);
-    Arduino.enviar('g'); bipTeste(1200, 150);
+    Arduino.enviar('g'); som(1200, 150);
   } else {
-    Arduino.enviar('r'); bipTeste(200, 400);
+    Arduino.enviar('r'); som(200, 400);
   }
   setTimeout(proxima, 1800);
 }
@@ -122,8 +123,8 @@ function quadro(agora) {
   }
   if (!resposta) {
     restante -= dt;
-    if (restante <= 3 && Math.ceil(restante) < ultimoTique) { ultimoTique = Math.ceil(restante); Arduino.enviar('t'); bipTeste(1500, 20); }
-    if (restante <= 0) { restante = 0; resposta = 'nenhuma'; Arduino.enviar('r'); bipTeste(200, 400); setTimeout(proxima, 1800); }
+    if (restante <= 3 && Math.ceil(restante) < ultimoTique) { ultimoTique = Math.ceil(restante); Arduino.enviar('t'); som(1500, 20); }
+    if (restante <= 0) { restante = 0; resposta = 'nenhuma'; Arduino.enviar('r'); som(200, 400); setTimeout(proxima, 1800); }
   }
   texto(ctx, `Pergunta ${numero} de ${POR_PARTIDA}`, 40 * s, 40 * s, 22 * s, '#93a1bd', 'left', 500);
   texto(ctx, `${pontos} pontos`, W - 40 * s, 40 * s, 26 * s, '#fff', 'right');

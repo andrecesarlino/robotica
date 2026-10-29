@@ -64,7 +64,7 @@ function comecar() {
 }
 function aviso(txt, cor, col) { avisos.push({ txt, cor, col, t: 0 }); }
 function apertou(col) {
-  bipTeste(NOTAS[col], 150);
+  som(NOTAS[col], 150);
   brilho[col] = 1;
   if (estado !== 'jogando') { if (estado === 'parado' || performance.now() - fimEm > 2000) comecar(); return; }
   const t = agoraS();
