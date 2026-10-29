@@ -14,7 +14,7 @@
 montarPagina({
   id: 'display',
   imagem: 'esquemas/display.svg',
-  semBlocos: 'O programa do display o professor mostra na aula.',
+  semBotao: true,
   titulo: 'Display 0 a 9',
   descricao: 'O display de 7 segmentos é formado por 7 LEDs compridos (os segmentos a até g). Acendendo alguns e apagando outros, aparece um número. O programa conta de 0 a 9, um número por segundo, e a tela mostra o mesmo número que está no display.',
   pecas: ['Display de 7 segmentos', '1 resistor 300 Ω'],
@@ -28,7 +28,7 @@ montarPagina({
     ['Segmento g', '8', 'pino de cima, 1º'],
     ['Comum (pino do meio)', 'GND', 'com o resistor 300 Ω no meio do caminho'],
   ],
-  passosExtras: ['Se nada acender, o display pode ser de ânodo comum: ligue o resistor do comum no + e troque CATODO_COMUM para false no código.'],
+  passosExtras: ['Se nada acender, o display pode ser de ânodo comum: ligue o resistor do comum no + e troque ALTO por BAIXO (e BAIXO por ALTO) nos blocos.'],
   teclado: 'Sem Arduino: teclas 0 a 9',
   teclas: Object.fromEntries([...'0123456789'].map(n => [n, n])),
 });
