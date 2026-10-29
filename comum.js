@@ -71,39 +71,41 @@ async function conectar() {
 function montarPagina(j) {
   document.title = j.titulo + ' · Robótica';
   const linhas = j.ligacoes.map(([peca, pino, obs]) =>
-    `<tr><td>${peca}</td><td><span class="pino">${pino}</span></td><td>${obs || ''}</td></tr>`).join('');
+    `<tr><td>${peca}${obs ? `<small>${obs}</small>` : ''}</td><td><span class="pino">${pino}</span></td></tr>`).join('');
+  const passos = ['Peças', 'Montagem', 'Código', 'Jogar'];
+  const nav = n => `<div class="navpasso">${n > 1 ? `<button data-ir="${n - 1}">← Voltar</button>` : '<span></span>'}${n < 4 ? `<button class="forte" data-ir="${n + 1}">Próximo: ${passos[n]} →</button>` : ''}</div>`;
   document.body.insertAdjacentHTML('afterbegin', `
   ${menuHtml('Jogos')}
-  <header class="topo">
-    <h1>${j.titulo}</h1>
-    <nav class="abas"><button data-aba="montar">1. Montar</button><button data-aba="jogar">2. Jogar</button></nav>
-  </header>
-  <main class="montar" id="montar">
-    <section class="caixa largo">
-      <p class="desc">${j.descricao}</p>
-      <ul class="pecas">${j.pecas.map(p => `<li>${p}</li>`).join('')}</ul>
-    </section>
-    <section class="caixa largo"><h2>Montagem</h2><img src="esquemas/${j.id}.svg" alt="Desenho da montagem"></section>
-    <section class="caixa"><h2>Ligações</h2>
-      <table><tr><th>Peça</th><th>Pino</th><th></th></tr>${linhas}</table>
-    </section>
-    <section class="caixa"><h2>Passo a passo</h2>
-      <ol class="passos">
-        <li>Prepare a protoboard como na etapa 0: 5V no + de baixo, GND no − de baixo e os trilhos de baixo ligados aos de cima.</li>
-        <li>Monte as peças seguindo o desenho e a tabela.</li>
-        <li>Digite o código abaixo na Arduino IDE e envie para a placa.</li>
-        <li><b>Feche o Monitor Serial</b> da IDE (senão a página não consegue usar a porta).</li>
-        <li>Vá na aba <b>2. Jogar</b>, clique em <b>Conectar Arduino</b> e escolha a porta.</li>
-        ${(j.passosExtras || []).map(p => `<li>${p}</li>`).join('')}
-      </ol>
-      ${j.tinkercad ? `<p>Circuito pronto no Tinkercad: <a href="${j.tinkercad}" target="_blank">abrir</a>. Lá dá para simular e testar pelo Monitor Serial; a tela do jogo só conecta no Arduino de verdade.</p>` : ''}
-    </section>
-    <section class="caixa largo codigo"><h2>Código do Arduino</h2>
-      <p class="obs">Digite o código na Arduino IDE olhando aqui. Os números do topo (os <code>const int</code>) são os pinos e os ajustes: dá para mudar e ver o que acontece.</p>
-      <pre id="codigo">carregando...</pre>
-    </section>
+  <div class="trilha"><a href="./">Jogos</a><span>›</span><b>${j.titulo}</b></div>
+  <ol class="passos-nav">${passos.map((t, i) => `<li data-ir="${i + 1}"><span>${i + 1}</span>${t}</li>`).join('')}</ol>
+  <main class="passo" data-passo="1">
+    <p class="desc">${j.descricao}</p>
+    <h2>Separe as peças</h2>
+    <ul class="pecas">${j.pecas.map(p => `<li>${p}</li>`).join('')}</ul>
+    <p class="nota">Além do Arduino, da protoboard e dos fios.</p>
+    ${nav(1)}
   </main>
-  <section class="jogar" id="jogar">
+  <main class="passo" data-passo="2">
+    <div class="montagem">
+      <figure><img src="${j.imagem || `montagem/${j.id}.png`}" alt="Montagem"><figcaption>
+        ${j.tinkercad ? `<a href="${j.tinkercad}" target="_blank">Abrir no Tinkercad</a> · ` : ''}<a href="esquemas/${j.id}.svg" target="_blank">Ver o desenho com as ligações</a></figcaption></figure>
+      <div>
+        <h2>Ligações</h2>
+        <table>${linhas}</table>
+        <ul class="avisos">
+          <li>Antes das peças: 5V no + e GND no − da protoboard.</li>
+          ${(j.passosExtras || []).map(p => `<li>${p}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+    ${nav(2)}
+  </main>
+  <main class="passo" data-passo="3">
+    <p class="dica-codigo">Digite na Arduino IDE e envie para a placa. Depois <b>feche o Monitor Serial</b>, senão a página não conecta.</p>
+    <pre id="codigo">carregando...</pre>
+    ${nav(3)}
+  </main>
+  <section class="jogar passo" data-passo="4" id="jogar">
     <div class="barra">
       <button class="forte" id="conectar">Conectar Arduino</button>
       <span class="led" id="led" title="LED do Arduino"></span>
@@ -113,22 +115,35 @@ function montarPagina(j) {
     <canvas id="tela"></canvas>
   </section>`);
 
-  const abas = document.querySelectorAll('.abas button');
-  const mostrar = aba => {
-    document.getElementById('montar').style.display = aba === 'montar' ? 'grid' : 'none';
-    document.getElementById('jogar').style.display = aba === 'jogar' ? 'flex' : 'none';
-    abas.forEach(b => b.classList.toggle('ativa', b.dataset.aba === aba));
-    location.hash = aba;
+  const ir = n => {
+    n = Math.min(4, Math.max(1, Number(n) || 1));
+    document.querySelectorAll('.passo').forEach(el => el.classList.toggle('ativo', el.dataset.passo == n));
+    document.querySelectorAll('.passos-nav li').forEach(li => {
+      li.classList.toggle('ativo', li.dataset.ir == n);
+      li.classList.toggle('feito', li.dataset.ir < n);
+    });
+    history.replaceState(null, '', '#' + n);
+    if (n === 4) ajustarTela();
+    scrollTo(0, 0);
   };
-  abas.forEach(b => b.onclick = () => mostrar(b.dataset.aba));
-  mostrar(location.hash === '#jogar' ? 'jogar' : 'montar');
+  document.addEventListener('click', e => { const alvo = e.target.closest('[data-ir]'); if (alvo) ir(alvo.dataset.ir); });
+  const pelaUrl = () => ir(location.hash === '#jogar' ? 4 : location.hash.slice(1));
+  addEventListener('hashchange', pelaUrl);
+  pelaUrl();
+
+  // a tela do jogo ocupa o resto da janela
+  function ajustarTela() {
+    const el = document.getElementById('jogar');
+    el.style.height = (innerHeight - el.getBoundingClientRect().top - scrollY) + 'px';
+  }
+  addEventListener('resize', ajustarTela);
 
   document.getElementById('conectar').onclick = conectar;
   fetch(`codigo/${j.id}/${j.id}.ino`).then(r => r.text()).then(t => document.getElementById('codigo').textContent = t);
 
-  // Teclado faz papel dos botões, para testar sem Arduino
+  // Teclado faz papel dos botões, só no passo Jogar
   addEventListener('keydown', e => {
-    if (e.repeat || !j.teclas) return;
+    if (e.repeat || !j.teclas || !document.getElementById('jogar').classList.contains('ativo')) return;
     const linha = j.teclas[e.key.toLowerCase()];
     if (linha) { e.preventDefault(); Arduino.aoReceber(linha); }
   });

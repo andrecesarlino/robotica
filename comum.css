@@ -11,40 +11,48 @@ button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid 
 button:hover { border-color: var(--azul); }
 button.forte { background: var(--verde); color: #08130d; border-color: var(--verde); font-weight: 600; }
 
-.topo { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--borda); flex-wrap: wrap; }
-.topo .voltar { text-decoration: none; color: var(--suave); }
-.topo h1 { font-size: 18px; }
-.abas { display: flex; gap: 6px; margin-left: auto; }
-.abas button { padding: 5px 12px; }
-.abas button.ativa { background: var(--azul); color: #061224; border-color: var(--azul); font-weight: 600; }
-
-/* Aba Montar */
-.montar { max-width: 960px; margin: 0 auto; padding: 18px 20px 48px; display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
-.montar .caixa { background: var(--painel); border: 1px solid var(--borda); border-radius: 12px; padding: 16px; }
-.montar .largo { grid-column: 1 / -1; }
-.montar h2 { font-size: 16px; margin-bottom: 10px; }
-.montar img { width: 100%; border-radius: 10px; background: #f4f6f8; display: block; }
-.montar table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.montar td, .montar th { text-align: left; padding: 6px 6px; border-bottom: 1px solid var(--borda); }
-.montar th { color: var(--suave); font-weight: 600; font-size: 12px; }
-.pino { display: inline-block; min-width: 36px; font-size: 13px; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; background: var(--amarelo); color: #221a00; border-radius: 6px; padding: 1px 6px; }
+/* Página de jogo em passos */
+.trilha { max-width: 920px; margin: 0 auto; padding: 14px 20px 0; font-size: 13px; color: var(--suave); display: flex; gap: 8px; align-items: center; }
+.trilha a { color: var(--suave); text-decoration: none; }
+.trilha a:hover { color: var(--texto); }
+.trilha b { color: var(--texto); font-weight: 600; }
+.passos-nav { max-width: 920px; margin: 10px auto 0; padding: 0 20px; list-style: none; display: flex; gap: 6px; }
+.passos-nav li { flex: 1; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; background: var(--painel); border: 1px solid var(--borda); color: var(--suave); font-size: 13px; font-weight: 600; cursor: pointer; }
+.passos-nav li span { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: #26324d; font-size: 11px; color: var(--texto); }
+.passos-nav li.ativo { border-color: var(--azul); color: var(--texto); }
+.passos-nav li.ativo span { background: var(--azul); color: #061224; }
+.passos-nav li.feito span { background: var(--verde); color: #08130d; }
+.passo { display: none; }
+.passo.ativo { display: block; }
+main.passo { max-width: 920px; margin: 14px auto 40px; padding: 18px 20px; background: var(--painel); border: 1px solid var(--borda); border-radius: 12px; box-sizing: border-box; width: calc(100% - 40px); }
+main.passo h2 { font-size: 14px; color: var(--suave); text-transform: uppercase; letter-spacing: 1px; margin: 14px 0 8px; }
+.desc { font-size: 15px; line-height: 1.55; margin: 0; }
+.nota { color: var(--suave); font-size: 12px; margin: 8px 0 0; }
+.montagem { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; align-items: start; }
+.montagem figure { margin: 0; }
+.montagem img { width: 100%; border-radius: 8px; display: block; background: #f4f6f8; }
+.montagem figcaption { font-size: 12px; color: var(--suave); margin-top: 6px; }
+.montagem h2 { margin-top: 0 !important; }
+.montagem table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.montagem td { padding: 5px 4px; border-bottom: 1px solid var(--borda); vertical-align: top; }
+.montagem td small { display: block; color: var(--suave); font-size: 11px; }
+.avisos { margin: 12px 0 0; padding-left: 16px; font-size: 12px; color: var(--suave); line-height: 1.5; }
+.pino { display: inline-block; min-width: 32px; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px; background: var(--amarelo); color: #221a00; border-radius: 6px; padding: 1px 6px; }
 .pecas { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .pecas li { background: #1d2740; border: 1px solid var(--borda); border-radius: 999px; padding: 3px 10px; font-size: 13px; }
-.passos { margin: 0; padding-left: 20px; line-height: 1.6; font-size: 14px; }
-.codigo { position: relative; }
-.codigo pre { background: #0a0f1a; border: 1px solid var(--borda); border-radius: 12px; padding: 16px; overflow: auto; max-height: 460px; font-size: 13px; line-height: 1.45; margin: 0; }
-.obs { background: #1d2740; border-left: 4px solid var(--amarelo); border-radius: 8px; padding: 8px 12px; margin: 0 0 10px; line-height: 1.45; font-size: 14px; }
-.desc { font-size: 15px; line-height: 1.55; color: var(--texto); margin: 0 0 10px; }
+.dica-codigo { font-size: 13px; color: var(--suave); margin: 0 0 10px; }
+#codigo { background: #0a0f1a; border: 1px solid var(--borda); border-radius: 10px; padding: 14px; overflow: auto; max-height: 60vh; font-size: 12.5px; line-height: 1.45; margin: 0; }
+.navpasso { display: flex; justify-content: space-between; margin-top: 16px; }
 
-/* Aba Jogar */
-.jogar { display: none; flex-direction: column; height: calc(100vh - 92px); }
-.barra { display: flex; gap: 10px; align-items: center; padding: 7px 20px; flex-wrap: wrap; border-bottom: 1px solid var(--borda); }
-.barra .status { color: var(--suave); }
+/* Passo Jogar */
+.jogar.ativo { display: flex; flex-direction: column; margin-top: 10px; }
+.barra { display: flex; gap: 10px; align-items: center; padding: 7px 20px; flex-wrap: wrap; border-bottom: 1px solid var(--borda); border-top: 1px solid var(--borda); }
+.barra .status { color: var(--suave); font-size: 13px; }
 .barra .dica { color: var(--suave); font-size: 12px; margin-left: auto; }
 .led { width: 16px; height: 16px; border-radius: 50%; background: #333; border: 2px solid #555; transition: background .1s, box-shadow .1s; }
 .jogar canvas { flex: 1; width: 100%; min-height: 0; display: block; }
 
-@media (max-width: 900px) { .montar { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .montagem { grid-template-columns: 1fr; } .passos-nav li { font-size: 0; gap: 0; justify-content: center; } }
 
 /* Menu do topo */
 .menu { display: flex; gap: 2px; align-items: center; padding: 6px 20px; border-bottom: 1px solid var(--borda); background: #0a0f1a; flex-wrap: wrap; }
