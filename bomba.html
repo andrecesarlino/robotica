@@ -13,17 +13,17 @@
 <script>
 montarPagina({
   id: 'bomba',
-  tinkercad: 'https://www.tinkercad.com/things/1FMnyEO7S4o',
+  tinkercad: 'https://www.tinkercad.com/things/dgJqslTmTUx',
   titulo: 'Desarme a bomba',
   descricao: 'A bomba tem um código secreto de 4 números. Gire o potenciômetro para escolher o número (0 a 9) e aperte o botão para tentar. Errou, a tela diz se o certo é maior ou menor e o relógio perde 5 segundos. O buzzer faz o tique-taque, que acelera no final, e o LED pisca junto. Descubra os 4 números antes do tempo acabar!',
   pecas: ['Potenciômetro', 'Botão', 'Buzzer', 'LED RGB', '3 resistores 300 Ω'],
   ligacoes: [
-    ['Potenciômetro (perna do meio)', 'A0', 'pernas dos lados no + e no −'],
-    ['Botão (tentar)', '2', 'outro canto no trilho −'],
-    ['Buzzer +', '8', 'perna − no trilho −'],
-    ['LED RGB vermelho (R)', '7', 'com resistor 300 Ω'],
-    ['LED RGB verde (G)', '6', 'com resistor 300 Ω'],
-    ['LED RGB azul (B)', '5', 'com resistor 300 Ω; perna maior no −'],
+    ['Potenciômetro (perna do meio)', 'A0', 'uma perna do lado no 5V, a outra no GND'],
+    ['Botão (tentar)', '2', 'o lado oposto do botão vai no GND'],
+    ['Buzzer +', '8', 'a outra perna vai no GND'],
+    ['LED RGB vermelho (R)', '7', 'com resistor de 300 Ω'],
+    ['LED RGB verde (G)', '6', 'com resistor de 300 Ω'],
+    ['LED RGB azul (B)', '5', 'com resistor de 300 Ω. A perna maior do LED vai no GND'],
   ],
   teclado: 'Sem Arduino: mouse para os lados escolhe o número, espaço tenta',
   teclas: { ' ': 'B1' },
@@ -56,7 +56,7 @@ function tentar() {
     if (certos === DIGITOS) {
       estado = 'desarmou'; fimEm = performance.now();
       recorde('bomba', Math.round(restante * 10));
-      Arduino.enviar('g'); Arduino.enviar('f'); bipTeste(1568, 400);
+      Arduino.enviar('f'); ledDaTela('g'); bipTeste(1568, 400);
     }
   } else {
     restante -= MULTA;
@@ -86,13 +86,13 @@ function quadro(agora) {
     restante -= dt;
     // tique-taque: 1 por segundo, 2 nos últimos 10 s, 4 nos últimos 5 s
     if (restante <= proximoTique) {
-      Arduino.enviar('t'); Arduino.enviar('y'); bipTeste(2000, 15);
-      setTimeout(() => estado === 'jogando' && Arduino.enviar('o'), 80);
+      Arduino.enviar('t'); bipTeste(2000, 15);  // o 6 no Arduino já pisca o LED amarelo
+      ledDaTela('y'); setTimeout(() => ledDaTela('o'), 80);
       proximoTique -= restante > 10 ? 1 : restante > 5 ? 0.5 : 0.25;
     }
     if (restante <= 0) {
       restante = 0; estado = 'explodiu'; flash = 1.2; fimEm = performance.now();
-      Arduino.enviar('r'); Arduino.enviar('x'); bipTeste(80, 900);
+      Arduino.enviar('x'); ledDaTela('r'); bipTeste(80, 900);
     }
   }
   dicaT -= dt;

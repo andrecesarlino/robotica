@@ -13,16 +13,17 @@
 <script>
 montarPagina({
   id: 'pescaria',
-  tinkercad: 'https://www.tinkercad.com/things/banFUg01c5c',
+  semBotao: true,
+  tinkercad: 'https://www.tinkercad.com/things/6csTFa6TBAw',
   titulo: 'Pescaria com a garra',
   descricao: 'Segure a garra na mão e abra e feche pelo joystick. Espalhe bolinhas de papel na mesa e coloque um pote com o sensor ultrassônico na boca, olhando para o fundo. Cada bolinha que cair no pote vale 1 ponto. São 60 segundos por equipe, e a tela guarda o ranking da turma.',
   pecas: ['Servo com a garra', 'Joystick', 'Sensor ultrassônico', 'Buzzer', 'Pote ou copo', 'Bolinhas de papel'],
   ligacoes: [
-    ['Servo da garra (fio laranja)', '9', 'marrom no −, vermelho no + de cima'],
-    ['Joystick VRx', 'A0', '+5V no +, GND no − de cima'],
-    ['Ultrassônico Trig', '10', 'VCC no +, GND no −'],
+    ['Servo da garra (fio laranja)', '9', 'fio marrom no GND, fio vermelho no 5V'],
+    ['Joystick VRx', 'A0', '+5V no 5V, GND no GND'],
+    ['Ultrassônico Trig', '10', 'VCC no 5V, GND no GND'],
     ['Ultrassônico Echo', '11', ''],
-    ['Buzzer +', '8', 'perna − no trilho −'],
+    ['Buzzer +', '8', 'a outra perna vai no GND'],
   ],
   passosExtras: [
     'Monte a garra no servo com ele parado em 60 graus (garra fechada), como na aula 4.',

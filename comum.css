@@ -68,3 +68,9 @@ main.passo h2 { font-size: 14px; color: var(--suave); text-transform: uppercase;
 .parte-topo em { font-style: normal; color: var(--suave); }
 .parte pre { max-height: none !important; }
 .inteiro summary { cursor: pointer; color: var(--azul); font-size: 13px; font-weight: 600; margin: 4px 0 8px; }
+
+.blocos-img { width: 100%; display: block; border-radius: 8px; border: 1px solid var(--borda); background: #f9f9f9; }
+.pullup { margin-top: 14px; background: #1d2740; border-left: 4px solid var(--amarelo); border-radius: 8px; padding: 10px 14px; font-size: 13px; line-height: 1.5; }
+.pullup p { margin: 6px 0; }
+.pullup pre { background: #0a0f1a; border-radius: 6px; padding: 8px 12px; margin: 6px 0; font-size: 13px; }
+.pullup code { font-family: 'JetBrains Mono', monospace; color: var(--amarelo); }

@@ -91,14 +91,8 @@ function mostrar() {
       ${p.pecas ? `<ul class="pecas">${p.pecas.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
       ${p.esquema ? `<a href="esquemas/${p.esquema}.svg" target="_blank"><img src="esquemas/${p.esquema}.svg" alt="Montagem: ${p.titulo}" loading="lazy"></a>` : ''}
       ${p.blocos ? `<div class="blocos">${p.blocos.map(b => `<img src="blocos/${b}.png" alt="Blocos: ${p.titulo}" loading="lazy">`).join('')}</div>` : ''}
-      ${p.codigo ? `<details><summary>Ver o código</summary><pre data-src="codigo/${p.codigo}.ino">carregando...</pre></details>` : ''}
       ${p.links ? `<div class="links">${p.links.map(([t, h]) => `<a href="${h}"${h.startsWith('http') ? ' target="_blank"' : ''}>${t}</a>`).join('')}</div>` : ''}
     </section>`).join('');
-  // o código só é baixado quando a pessoa abre o "Ver o código"
-  el.querySelectorAll('details').forEach(d => d.addEventListener('toggle', () => {
-    const pre = d.querySelector('pre');
-    if (d.open && pre.textContent === 'carregando...') fetch(pre.dataset.src, { cache: 'no-cache' }).then(r => r.text()).then(t => pre.textContent = t);
-  }));
   scrollTo(0, 0);
 }
 addEventListener('hashchange', mostrar);

@@ -16,10 +16,13 @@ const Arduino = {
   // Manda uma letra para o Arduino (acende LED, toca buzzer). Também acende o LED de mentira da tela.
   enviar(letra) {
     ledDaTela(letra);
-    if (Arduino.escritor) Arduino.escritor.write(new TextEncoder().encode(letra)).catch(() => {});
+    // os blocos do Tinkercad comparam números: a tela manda 1 para vermelho, 2 para verde...
+    const n = NUMERO_DO_COMANDO[letra];
+    if (Arduino.escritor && n) Arduino.escritor.write(new Uint8Array([n])).catch(() => {});
   },
 };
 
+const NUMERO_DO_COMANDO = { r: 1, g: 2, b: 3, y: 4, o: 5, t: 6, a: 7, e: 8, f: 9, x: 10, c: 11 };
 const CORES_LED = { r: '#ff3355', g: '#33ff77', b: '#3399ff', y: '#ffd23f' };
 function ledDaTela(letra) {
   const led = document.getElementById('led');
@@ -72,63 +75,62 @@ function montarPagina(j) {
   document.title = j.titulo + ' · Robótica';
   const linhas = j.ligacoes.map(([peca, pino, obs]) =>
     `<tr><td>${peca}${obs ? `<small>${obs}</small>` : ''}</td><td><span class="pino">${pino}</span></td></tr>`).join('');
-  const passos = ['Peças', 'Montagem', 'Código', 'Jogar'];
-  const nav = n => `<div class="navpasso">${n > 1 ? `<button data-ir="${n - 1}">← Voltar</button>` : '<span></span>'}${n < 4 ? `<button class="forte" data-ir="${n + 1}">Próximo: ${passos[n]} →</button>` : ''}</div>`;
+  const passos = ['Montagem', 'Blocos', 'Jogar'];
+  const nav = n => `<div class="navpasso">${n > 1 ? `<button data-ir="${n - 1}">← Voltar</button>` : '<span></span>'}${n < 3 ? `<button class="forte" data-ir="${n + 1}">Próximo: ${passos[n]} →</button>` : ''}</div>`;
   document.body.insertAdjacentHTML('afterbegin', `
   ${menuHtml('Jogos')}
   <div class="trilha"><a href="./">Jogos</a><span>›</span><b>${j.titulo}</b></div>
   <ol class="passos-nav">${passos.map((t, i) => `<li data-ir="${i + 1}"><span>${i + 1}</span>${t}</li>`).join('')}</ol>
   <main class="passo" data-passo="1">
-    <p class="desc">${j.descricao}</p>
-    <h2>Separe as peças</h2>
-    <ul class="pecas">${j.pecas.map(p => `<li>${p}</li>`).join('')}</ul>
-    <p class="nota">Além do Arduino, da protoboard e dos fios.</p>
-    ${nav(1)}
-  </main>
-  <main class="passo" data-passo="2">
     <div class="montagem">
       <figure><img src="${j.imagem || `montagem/${j.id}.png`}" alt="Montagem"><figcaption>
-        ${j.tinkercad ? `<a href="${j.tinkercad}" target="_blank">Abrir no Tinkercad</a> · ` : ''}<a href="esquemas/${j.id}.svg" target="_blank">Ver o desenho com as ligações</a></figcaption></figure>
+        ${j.tinkercad ? `<a href="${j.tinkercad}" target="_blank">Circuito no Tinkercad (para montar os blocos)</a> · ` : ''}<a href="esquemas/${j.id}.svg" target="_blank">Ver o desenho com as ligações</a></figcaption></figure>
       <div>
         <h2>Ligações</h2>
         <table>${linhas}</table>
         <ul class="avisos">
-          <li>Antes das peças: 5V no + e GND no − da protoboard.</li>
+          <li>Antes de tudo: ligue o 5V e o GND do Arduino nas linhas + e − da protoboard.</li>
           ${(j.passosExtras || []).map(p => `<li>${p}</li>`).join('')}
         </ul>
       </div>
     </div>
+    ${nav(1)}
+  </main>
+  <main class="passo" data-passo="2">
+    ${j.semBlocos ? `<p class="dica-codigo">${j.semBlocos}</p>` : `
+    <p class="dica-codigo">Monte estes blocos no Tinkercad${j.tinkercad ? ` (<a href="${j.tinkercad}" target="_blank">abrir o circuito</a>)` : ''}.</p>
+    <img class="blocos-img" src="blocos/jogos/${j.id}.png" alt="Blocos do jogo">
+    <div class="pullup">
+      <b>Antes de enviar para a placa</b>
+      <p>No Tinkercad, troque <b>Blocos</b> por <b>Blocos + Texto</b>, copie o texto e cole na Arduino IDE.${j.semBotao ? '' : ` Nos pinos dos botões, troque <code>INPUT</code> por <code>INPUT_PULLUP</code>:</p>
+      <pre>pinMode(2, INPUT_PULLUP);</pre>
+      <p>Assim o botão funciona sem resistor.`} Depois envie para a placa e feche o Monitor Serial.</p>
+    </div>`}
     ${nav(2)}
   </main>
-  <main class="passo" data-passo="3">
-    <p class="dica-codigo">Digite as partes na ordem, uma embaixo da outra, na Arduino IDE. Depois envie para a placa e <b>feche o Monitor Serial</b>, senão a página não conecta.</p>
-    <div id="partes"></div>
-    <details class="inteiro"><summary>Ver o código inteiro</summary><pre id="codigo">carregando...</pre></details>
-    ${nav(3)}
-  </main>
-  <section class="jogar passo" data-passo="4" id="jogar">
+  <section class="jogar passo" data-passo="3" id="jogar">
     <div class="barra">
       <button class="forte" id="conectar">Conectar Arduino</button>
       <span class="led" id="led" title="LED do Arduino"></span>
-      <span class="status" id="status">sem Arduino: dá para testar pelo teclado</span>
+      <span class="status" id="status"></span>
       <span class="dica">${j.teclado}</span>
     </div>
     <canvas id="tela"></canvas>
   </section>`);
 
   const ir = n => {
-    n = Math.min(4, Math.max(1, Number(n) || 1));
+    n = Math.min(3, Math.max(1, Number(n) || 1));
     document.querySelectorAll('.passo').forEach(el => el.classList.toggle('ativo', el.dataset.passo == n));
     document.querySelectorAll('.passos-nav li').forEach(li => {
       li.classList.toggle('ativo', li.dataset.ir == n);
       li.classList.toggle('feito', li.dataset.ir < n);
     });
     history.replaceState(null, '', '#' + n);
-    if (n === 4) ajustarTela();
+    if (n === 3) ajustarTela();
     scrollTo(0, 0);
   };
   document.addEventListener('click', e => { const alvo = e.target.closest('[data-ir]'); if (alvo) ir(alvo.dataset.ir); });
-  const pelaUrl = () => ir(location.hash === '#jogar' ? 4 : location.hash.slice(1));
+  const pelaUrl = () => ir(location.hash === '#jogar' ? 3 : location.hash.slice(1));
   addEventListener('hashchange', pelaUrl);
   pelaUrl();
 
@@ -140,22 +142,6 @@ function montarPagina(j) {
   addEventListener('resize', ajustarTela);
 
   document.getElementById('conectar').onclick = conectar;
-  // O .ino tem linhas "//## Título | explicação" marcando o começo de cada parte
-  fetch(`codigo/${j.id}/${j.id}.ino`, { cache: 'no-cache' }).then(r => r.text()).then(t => {
-    const partes = [];
-    for (const linha of t.split('\n')) {
-      const m = linha.match(/^\/\/## (.*?) \| (.*)$/);
-      if (m) partes.push({ titulo: m[1], explica: m[2], linhas: [] });
-      else if (partes.length) partes[partes.length - 1].linhas.push(linha);
-    }
-    const limpo = l => l.join('\n').replace(/^\n+|\n+$/g, '');
-    const esc = x => x.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-    document.getElementById('partes').innerHTML = partes.map((p, i) => `
-      <section class="parte"><div class="parte-topo"><span>${i + 1}</span><b>${p.titulo}</b><em>${p.explica}</em></div>
-      <pre>${esc(limpo(p.linhas))}</pre></section>`).join('');
-    document.getElementById('codigo').textContent = t.split('\n').filter(l => !l.startsWith('//##')).join('\n');
-  });
-
   // Teclado faz papel dos botões, só no passo Jogar
   addEventListener('keydown', e => {
     if (e.repeat || !j.teclas || !document.getElementById('jogar').classList.contains('ativo')) return;
