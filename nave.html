@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="comum.css">
+<title>Robótica</title>
+</head>
+<body>
+<script src="comum.js"></script>
+<script>
+montarPagina({
+  id: 'nave',
+  titulo: 'Nave controlada pela mão',
+  descricao: 'Passe a mão sobre o sensor ultrassônico: mão perto, a nave desce; mão longe, a nave sobe. Desvie dos asteroides e aperte o botão para atirar. Bateu, o buzzer apita e o LED fica vermelho. São 3 vidas.',
+  pecas: ['Sensor ultrassônico', 'Botão', 'Buzzer', 'LED RGB', '3 resistores 300 Ω'],
+  ligacoes: [
+    ['Ultrassônico Trig', '10', 'VCC no +, GND no −'],
+    ['Ultrassônico Echo', '11', ''],
+    ['Botão (atirar)', '2', 'outro canto no trilho −'],
+    ['Buzzer +', '8', 'perna − no trilho −'],
+    ['LED RGB vermelho (R)', '7', 'com resistor 300 Ω'],
+    ['LED RGB verde (G)', '6', 'com resistor 300 Ω'],
+    ['LED RGB azul (B)', '5', 'com resistor 300 Ω; perna maior no −'],
+  ],
+  passosExtras: ['Deixe o sensor deitado na mesa, olhando para cima. A mão funciona entre 5 e 40 cm de altura.'],
+  teclado: 'Sem Arduino: mouse sobe e desce a nave, espaço atira',
+  teclas: { ' ': 'B1' },
+});
+
+const PERTO = 5, LONGE = 40;      // cm: faixa da mão
+let alvoY = 0.5, naveY = 0.5;     // 0 = em cima, 1 = embaixo
+let estado = 'parado';            // parado, jogando, fim
+let fimEm = 0;
+let pontos = 0, vidas = 3, tempo = 0, piscar = 0;
+let asteroides = [], tiros = [], estrelas = [], explosoes = [];
+for (let i = 0; i < 120; i++) estrelas.push({ x: Math.random(), y: Math.random(), v: 0.02 + Math.random() * 0.08 });
+
+Arduino.aoReceber = linha => {
+  if (linha[0] === 'D') {
+    const d = Number(linha.slice(1));
+    if (d >= 2 && d <= 80) alvoY = 1 - Math.min(1, Math.max(0, (d - PERTO) / (LONGE - PERTO)));
+  }
+  if (linha === 'B1') atirar();
+};
+document.addEventListener('mousemove', e => {
+  if (Arduino.escritor) return;
+  const r = document.getElementById('tela').getBoundingClientRect();
+  if (e.clientY > r.top) alvoY = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+});
+
+function comecar() {
+  estado = 'jogando'; pontos = 0; vidas = 3; tempo = 0;
+  asteroides = []; tiros = []; explosoes = [];
+  Arduino.enviar('g');
+}
+function atirar() {
+  if (estado !== 'jogando') { if (performance.now() - fimEm > 1500) comecar(); return; }
+  if (tiros.length > 4) return;
+  tiros.push({ x: 0.16, y: naveY });
+  Arduino.enviar('t'); bipTeste(1800, 30);
+}
+document.getElementById('tela').addEventListener('click', () => { if (estado !== 'jogando') comecar(); });
+
+let antes = performance.now();
+function quadro(agora) {
+  requestAnimationFrame(quadro);
+  const dt = Math.min(0.1, (agora - antes) / 1000); antes = agora;
+  const { ctx, W, H, s } = prepararTela();
+  naveY += (alvoY - naveY) * Math.min(1, dt * 8);  // suaviza o sensor
+
+  ctx.fillStyle = '#050813'; ctx.fillRect(0, 0, W, H);
+  for (const e of estrelas) {
+    e.x -= e.v * dt * (estado === 'jogando' ? 3 : 1); if (e.x < 0) { e.x = 1; e.y = Math.random(); }
+    ctx.fillStyle = `rgba(255,255,255,${e.v * 8})`; ctx.fillRect(e.x * W, e.y * H, 2 * s, 2 * s);
+  }
+  const margem = 40 * s, alturaUtil = H - 2 * margem;
+  const ny = margem + naveY * alturaUtil, nx = W * 0.12;
+
+  if (estado === 'jogando') {
+    tempo += dt;
+    const velocidade = 0.25 + tempo * 0.008;
+    if (Math.random() < dt * (0.9 + tempo * 0.04)) {
+      const r = (18 + Math.random() * 30) * s;
+      asteroides.push({ x: 1.05, y: margem + Math.random() * alturaUtil, r, v: velocidade * (0.8 + Math.random() * 0.6), giro: Math.random() * 6, lados: 7 + (Math.random() * 4 | 0) });
+    }
+    for (const a of asteroides) { a.x -= a.v * dt; a.giro += dt; }
+    for (const t of tiros) t.x += 1.2 * dt;
+    // tiro acerta asteroide
+    for (const t of tiros) for (const a of asteroides) {
+      if (!a.morto && !t.morto && Math.hypot(t.x * W - a.x * W, margem + t.y * alturaUtil - a.y) < a.r + 6 * s) {
+        a.morto = t.morto = true; pontos += 10; explosoes.push({ x: a.x * W, y: a.y, t: 0, cor: '#ffd166' });
+        Arduino.enviar('a'); bipTeste(1200, 80);
+      }
+    }
+    // asteroide bate na nave
+    for (const a of asteroides) {
+      if (!a.morto && Math.hypot(a.x * W - nx, a.y - ny) < a.r + 18 * s) {
+        a.morto = true; vidas--; piscar = 1; explosoes.push({ x: nx, y: ny, t: 0, cor: '#ff5470' });
+        Arduino.enviar('r'); Arduino.enviar('e'); bipTeste(150, 400);
+        setTimeout(() => estado === 'jogando' && Arduino.enviar('g'), 600);
+        if (vidas <= 0) { estado = 'fim'; fimEm = performance.now(); recorde('nave', pontos); setTimeout(() => Arduino.enviar('o'), 700); }
+      }
+      if (a.x < -0.1 && !a.morto) { a.morto = true; pontos += 1; }
+    }
+    asteroides = asteroides.filter(a => !a.morto);
+    tiros = tiros.filter(t => !t.morto && t.x < 1.1);
+  }
+
+  for (const a of asteroides) {
+    ctx.save(); ctx.translate(a.x * W, a.y); ctx.rotate(a.giro);
+    ctx.beginPath();
+    for (let i = 0; i < a.lados; i++) {
+      const ang = i / a.lados * Math.PI * 2, rr = a.r * (0.75 + 0.25 * Math.sin(i * 7.3 + a.lados));
+      ctx.lineTo(Math.cos(ang) * rr, Math.sin(ang) * rr);
+    }
+    ctx.closePath(); ctx.fillStyle = '#5a5f73'; ctx.fill(); ctx.strokeStyle = '#9aa0b8'; ctx.lineWidth = 2 * s; ctx.stroke();
+    ctx.restore();
+  }
+  ctx.fillStyle = '#4ea8ff';
+  for (const t of tiros) ctx.fillRect(t.x * W, margem + t.y * alturaUtil - 2 * s, 26 * s, 4 * s);
+
+  // nave
+  piscar = Math.max(0, piscar - dt);
+  if (estado !== 'fim' && !(piscar > 0 && Math.floor(piscar * 12) % 2)) {
+    ctx.save(); ctx.translate(nx, ny);
+    ctx.fillStyle = '#ff9f1c'; ctx.beginPath(); ctx.moveTo(-26 * s, -6 * s); ctx.lineTo(-40 * s - Math.random() * 12 * s, 0); ctx.lineTo(-26 * s, 6 * s); ctx.fill();
+    ctx.fillStyle = '#e8edf7'; ctx.beginPath(); ctx.moveTo(30 * s, 0); ctx.lineTo(-24 * s, -18 * s); ctx.lineTo(-16 * s, 0); ctx.lineTo(-24 * s, 18 * s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#4ea8ff'; ctx.beginPath(); ctx.ellipse(4 * s, 0, 9 * s, 5 * s, 0, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+  for (const e of explosoes) {
+    e.t += dt;
+    ctx.globalAlpha = Math.max(0, 1 - e.t * 2); ctx.strokeStyle = e.cor; ctx.lineWidth = 4 * s;
+    ctx.beginPath(); ctx.arc(e.x, e.y, e.t * 140 * s, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  explosoes = explosoes.filter(e => e.t < 0.5);
+
+  texto(ctx, `${pontos}`, W / 2, 34 * s, 34 * s, '#fff');
+  texto(ctx, '♥'.repeat(Math.max(0, vidas)), 24 * s, 34 * s, 30 * s, '#ff5470', 'left');
+  texto(ctx, `recorde ${recorde('nave', 0)}`, W - 24 * s, 34 * s, 18 * s, '#93a1bd', 'right', 500);
+  if (estado === 'parado') {
+    texto(ctx, 'NAVE', W / 2, H / 2 - 50 * s, 80 * s, '#fff');
+    texto(ctx, 'Aperte o botão para começar', W / 2, H / 2 + 20 * s, 26 * s, '#ffd166', 'center', 500);
+    texto(ctx, 'mão perto do sensor: desce · mão longe: sobe', W / 2, H / 2 + 60 * s, 20 * s, '#93a1bd', 'center', 500);
+  }
+  if (estado === 'fim') {
+    texto(ctx, 'FIM DE JOGO', W / 2, H / 2 - 40 * s, 70 * s, '#ff5470');
+    texto(ctx, `${pontos} pontos`, W / 2, H / 2 + 25 * s, 34 * s, '#fff');
+    texto(ctx, 'Aperte o botão para jogar de novo', W / 2, H / 2 + 75 * s, 22 * s, '#ffd166', 'center', 500);
+  }
+}
+requestAnimationFrame(quadro);
+</script>
+</body>
+</html>

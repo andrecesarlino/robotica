@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="comum.css">
+<title>Capacitação de Robótica</title>
+<style>
+  .capa { max-width: 1200px; margin: 0 auto; padding: 48px 20px 20px; }
+  .capa p { color: var(--suave); font-size: 18px; margin: 10px 0 0; }
+  .capa .sobre { font-family: 'JetBrains Mono', monospace; color: var(--verde); letter-spacing: 2px; font-size: 14px; }
+  .capa h1 { font-size: 48px; margin-top: 8px; }
+  .grade { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+  .cartao { background: var(--painel); border: 1px solid var(--borda); border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 12px; text-decoration: none; color: var(--texto); transition: transform .15s, border-color .15s; border-top: 6px solid var(--cor); }
+  .cartao:hover { transform: translateY(-4px); border-color: var(--cor); }
+  .cartao .icone { font-size: 46px; }
+  .cartao h2 { font-size: 26px; }
+  .cartao p { margin: 0; color: var(--suave); line-height: 1.5; }
+  .cartao .pecas li { font-size: 14px; padding: 4px 10px; }
+  .titulo-sec { max-width: 1200px; margin: 30px auto 0; padding: 0 20px; font-size: 26px; }
+  footer { max-width: 1200px; margin: 0 auto; padding: 40px 20px; color: var(--suave); font-size: 14px; }
+</style>
+</head>
+<body>
+<header class="capa">
+  <div class="sobre">CAPACITAÇÃO DE ROBÓTICA</div>
+  <h1>Escolha um jogo</h1>
+  <p>Cada jogo tem o manual de montagem (peças, pinos e código) e a tela para jogar. Use o Google Chrome ou o Microsoft Edge.</p>
+</header>
+<main class="grade" id="jogos"></main>
+<h2 class="titulo-sec">Projetos da aula 4</h2>
+<section class="grade" id="projetos"></section>
+<footer>Diego Jacomini e André Cesar Lino</footer>
+<script>
+const JOGOS = [
+  ['nave', '🚀', 'Nave controlada pela mão', 'A mão sobre o sensor sobe e desce a nave para desviar dos asteroides.', ['Ultrassônico', 'Botão', 'Buzzer', 'LED RGB'], '#4ea8ff'],
+  ['quiz', '❓', 'Quiz de botões', 'Perguntas sobre o curso: responda no botão A ou B antes do tempo acabar.', ['2 botões', 'LED verde', 'LED vermelho', 'Buzzer'], '#e84393'],
+  ['ritmo', '🎵', 'Jogo de ritmo', 'Aperte o botão certo na hora certa e a música sai no buzzer.', ['4 botões', 'Buzzer', 'LED RGB'], '#b388ff'],
+  ['cabo', '💪', 'Cabo de guerra', 'Dois jogadores apertam o mais rápido que conseguem para puxar a corda.', ['2 botões', 'Buzzer', 'LED RGB'], '#ff5470'],
+  ['bomba', '💣', 'Desarme a bomba', 'Descubra o código secreto com o potenciômetro antes do tempo acabar.', ['Potenciômetro', 'Botão', 'Buzzer', 'LED RGB'], '#ffd166'],
+  ['pescaria', '🦾', 'Pescaria com a garra', 'Pegue bolinhas com a garra e jogue no pote: cada uma vale 1 ponto.', ['Garra (servo)', 'Joystick', 'Ultrassônico', 'Buzzer'], '#3ddc84'],
+];
+const PROJETOS = [
+  ['radar.html', '📡', 'Radar', 'Servo gira o sensor ultrassônico e a tela mostra os objetos.', ['Servo', 'Ultrassônico', 'Buzzer'], '#3ddc84'],
+  ['sensor-re.html', '🚗', 'Sensor de ré', 'Os LEDs e o buzzer avisam quando o objeto chega perto.', ['Ultrassônico', '3 LEDs', 'Buzzer'], '#ff9f1c'],
+];
+const cartao = ([href, icone, nome, desc, pecas, cor]) => `
+  <a class="cartao" style="--cor:${cor}" href="${href.includes('.') ? href : href + '.html'}">
+    <div class="icone">${icone}</div><h2>${nome}</h2><p>${desc}</p>
+    <ul class="pecas">${pecas.map(p => `<li>${p}</li>`).join('')}</ul>
+  </a>`;
+document.getElementById('jogos').innerHTML = JOGOS.map(cartao).join('');
+document.getElementById('projetos').innerHTML = PROJETOS.map(cartao).join('');
+</script>
+</body>
+</html>

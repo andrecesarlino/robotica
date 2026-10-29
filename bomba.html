@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="comum.css">
+<title>Robótica</title>
+</head>
+<body>
+<script src="comum.js"></script>
+<script>
+montarPagina({
+  id: 'bomba',
+  titulo: 'Desarme a bomba',
+  descricao: 'A bomba tem um código secreto de 4 números. Gire o potenciômetro para escolher o número (0 a 9) e aperte o botão para tentar. Errou, a tela diz se o certo é maior ou menor e o relógio perde 5 segundos. O buzzer faz o tique-taque, que acelera no final, e o LED pisca junto. Descubra os 4 números antes do tempo acabar!',
+  pecas: ['Potenciômetro', 'Botão', 'Buzzer', 'LED RGB', '3 resistores 300 Ω'],
+  ligacoes: [
+    ['Potenciômetro (perna do meio)', 'A0', 'pernas dos lados no + e no −'],
+    ['Botão (tentar)', '2', 'outro canto no trilho −'],
+    ['Buzzer +', '8', 'perna − no trilho −'],
+    ['LED RGB vermelho (R)', '7', 'com resistor 300 Ω'],
+    ['LED RGB verde (G)', '6', 'com resistor 300 Ω'],
+    ['LED RGB azul (B)', '5', 'com resistor 300 Ω; perna maior no −'],
+  ],
+  teclado: 'Sem Arduino: mouse para os lados escolhe o número, espaço tenta',
+  teclas: { ' ': 'B1' },
+});
+
+const DIGITOS = 4, TEMPO = 60, MULTA = 5;
+let estado = 'parado';   // parado, jogando, desarmou, explodiu
+let codigo = [], certos = 0, numero = 0, restante = TEMPO, proximoTique = 0;
+let dica = '', dicaT = 0, tentativas = 0, flash = 0, fimEm = 0, girar = 0;
+
+Arduino.aoReceber = linha => {
+  if (linha[0] === 'P') numero = Math.min(9, Math.floor(Number(linha.slice(1)) / 1024 * 10));
+  if (linha === 'B1') tentar();
+};
+document.addEventListener('mousemove', e => {
+  if (Arduino.escritor) return;
+  numero = Math.min(9, Math.max(0, Math.floor(e.clientX / innerWidth * 10)));
+});
+
+function comecar() {
+  codigo = Array.from({ length: DIGITOS }, () => Math.floor(Math.random() * 10));
+  certos = 0; restante = TEMPO; proximoTique = TEMPO; tentativas = 0; dica = ''; estado = 'jogando';
+}
+function tentar() {
+  if (estado !== 'jogando') { if (estado === 'parado' || performance.now() - fimEm > 2000) comecar(); return; }
+  tentativas++;
+  if (numero === codigo[certos]) {
+    certos++; dica = 'CERTO!'; dicaT = 1.2;
+    Arduino.enviar('a'); bipTeste(1300, 120);
+    if (certos === DIGITOS) {
+      estado = 'desarmou'; fimEm = performance.now();
+      recorde('bomba', Math.round(restante * 10));
+      Arduino.enviar('g'); Arduino.enviar('f'); bipTeste(1568, 400);
+    }
+  } else {
+    restante -= MULTA;
+    dica = numero < codigo[certos] ? 'É MAIOR ▲' : 'É MENOR ▼'; dicaT = 2;
+    Arduino.enviar('e'); bipTeste(300, 250);
+  }
+}
+
+function painelDigito(ctx, x, y, w, h, valor, cor, borda, s, fantasma = true) {
+  ctx.fillStyle = '#0a0f1a'; ctx.strokeStyle = borda; ctx.lineWidth = 4 * s;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, 14 * s); ctx.fill(); ctx.stroke();
+  ctx.font = `700 ${h * 0.7}px 'JetBrains Mono', monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (fantasma) ctx.fillStyle = '#1b2236', ctx.fillText('8', x + w / 2, y + h / 2 + 4 * s);  // segmentos apagados ao fundo
+  ctx.fillStyle = cor; ctx.fillText(valor, x + w / 2, y + h / 2 + 4 * s);
+}
+
+let antes = performance.now();
+function quadro(agora) {
+  requestAnimationFrame(quadro);
+  const dt = Math.min(0.1, (agora - antes) / 1000); antes = agora;
+  const { ctx, W, H, s } = prepararTela();
+  flash = Math.max(0, flash - dt);
+  ctx.fillStyle = estado === 'explodiu' && flash > 0 ? `rgba(255,${120 - flash * 100},60,1)` : '#0d1321';
+  ctx.fillRect(0, 0, W, H);
+
+  if (estado === 'jogando') {
+    restante -= dt;
+    // tique-taque: 1 por segundo, 2 nos últimos 10 s, 4 nos últimos 5 s
+    if (restante <= proximoTique) {
+      Arduino.enviar('t'); Arduino.enviar('y'); bipTeste(2000, 15);
+      setTimeout(() => estado === 'jogando' && Arduino.enviar('o'), 80);
+      proximoTique -= restante > 10 ? 1 : restante > 5 ? 0.5 : 0.25;
+    }
+    if (restante <= 0) {
+      restante = 0; estado = 'explodiu'; flash = 1.2; fimEm = performance.now();
+      Arduino.enviar('r'); Arduino.enviar('x'); bipTeste(80, 900);
+    }
+  }
+  dicaT -= dt;
+  const tremor = estado === 'explodiu' && flash > 0 ? (Math.random() - 0.5) * 30 * s * flash : 0;
+  ctx.save(); ctx.translate(tremor, tremor);
+
+  // bomba: corpo, pavio e painel do relógio
+  const cx = W / 2, top = H * 0.08, pw = Math.min(W * 0.8, 820 * s), ph = Math.min(H * 0.82, 560 * s);
+  const px = cx - pw / 2;
+  ctx.fillStyle = '#2a2f3d'; ctx.strokeStyle = '#444b60'; ctx.lineWidth = 6 * s;
+  ctx.beginPath(); ctx.roundRect(px, top, pw, ph, 30 * s); ctx.fill(); ctx.stroke();
+  // fios coloridos
+  ['#ff5470', '#4ea8ff', '#ffd166', '#3ddc84'].forEach((cor, i) => {
+    ctx.strokeStyle = cor; ctx.lineWidth = 8 * s;
+    ctx.beginPath(); ctx.moveTo(px + 40 * s, top + 60 * s + i * 22 * s);
+    ctx.bezierCurveTo(px + 120 * s, top + 20 * s + i * 30 * s, px + pw - 120 * s, top + 120 * s - i * 20 * s, px + pw - 40 * s, top + 60 * s + i * 22 * s);
+    ctx.stroke();
+  });
+  // relógio
+  const seg = Math.max(0, restante);
+  const tempoTxt = `${String(Math.floor(seg / 60)).padStart(2, '0')}:${String(Math.floor(seg % 60)).padStart(2, '0')}`;
+  const rw = pw * 0.6, rh = ph * 0.24, rx = cx - rw / 2, ry = top + ph * 0.3;
+  painelDigito(ctx, rx, ry, rw, rh, '', '#ff3355', '#5a1020', s, false);
+  ctx.font = `700 ${rh * 0.75}px 'JetBrains Mono', monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#2a0d14'; ctx.fillText('88:88', cx, ry + rh / 2 + 4 * s);
+  ctx.fillStyle = seg <= 10 && Math.floor(seg * 4) % 2 ? '#ff8899' : '#ff3355'; ctx.fillText(tempoTxt, cx, ry + rh / 2 + 4 * s);
+
+  // dígitos do código
+  const dw = Math.min(110 * s, pw / 6), dh = dw * 1.35, gap = 22 * s;
+  const dx0 = cx - (DIGITOS * dw + (DIGITOS - 1) * gap) / 2, dy = ry + rh + 40 * s;
+  for (let i = 0; i < DIGITOS; i++) {
+    const x = dx0 + i * (dw + gap);
+    if (i < certos) painelDigito(ctx, x, dy, dw, dh, String(codigo[i]), '#3ddc84', '#3ddc84', s);
+    else if (i === certos && estado === 'jogando') painelDigito(ctx, x, dy, dw, dh, String(numero), '#ffd166', '#ffd166', s);
+    else painelDigito(ctx, x, dy, dw, dh, estado === 'explodiu' ? String(codigo[i]) : '', '#ff5470', '#444b60', s);
+  }
+  ctx.restore();
+
+  if (dicaT > 0) texto(ctx, dica, cx, top + ph + 50 * s, 46 * s, dica === 'CERTO!' ? '#3ddc84' : '#ffd166');
+  if (estado === 'parado') {
+    ctx.fillStyle = 'rgba(13,19,33,.85)'; ctx.fillRect(0, 0, W, H);
+    texto(ctx, 'DESARME A BOMBA', W / 2, H / 2 - 80 * s, 72 * s, '#ff5470');
+    texto(ctx, `Descubra o código de ${DIGITOS} números em ${TEMPO} segundos`, W / 2, H / 2 - 10 * s, 28 * s, '#fff', 'center', 500);
+    texto(ctx, 'Gire o potenciômetro e aperte o botão. A tela avisa se é maior ou menor.', W / 2, H / 2 + 30 * s, 22 * s, '#93a1bd', 'center', 500);
+    texto(ctx, 'Aperte o botão para começar', W / 2, H / 2 + 90 * s, 26 * s, '#ffd166', 'center', 500);
+  }
+  if (estado === 'desarmou') {
+    ctx.fillStyle = 'rgba(10,40,25,.85)'; ctx.fillRect(0, 0, W, H);
+    texto(ctx, 'BOMBA DESARMADA!', W / 2, H / 2 - 60 * s, 76 * s, '#3ddc84');
+    texto(ctx, `sobraram ${Math.round(restante)} segundos · ${tentativas} tentativas · recorde ${recorde('bomba', 0)} pontos`, W / 2, H / 2 + 10 * s, 26 * s, '#fff', 'center', 500);
+    texto(ctx, 'Aperte o botão para jogar de novo', W / 2, H / 2 + 70 * s, 24 * s, '#ffd166', 'center', 500);
+  }
+  if (estado === 'explodiu' && flash <= 0) {
+    ctx.fillStyle = 'rgba(40,8,12,.8)'; ctx.fillRect(0, 0, W, H);
+    texto(ctx, 'BUM!', W / 2, H / 2 - 60 * s, 120 * s, '#ff5470');
+    texto(ctx, `o código era ${codigo.join(' ')}`, W / 2, H / 2 + 30 * s, 30 * s, '#fff', 'center', 500);
+    texto(ctx, 'Aperte o botão para tentar de novo', W / 2, H / 2 + 80 * s, 24 * s, '#ffd166', 'center', 500);
+  }
+}
+requestAnimationFrame(quadro);
+</script>
+</body>
+</html>

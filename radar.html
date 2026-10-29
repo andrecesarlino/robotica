@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Radar Arduino</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; color: #3f3; font-family: monospace; }
+  body { display: flex; flex-direction: column; }
+  header { display: flex; gap: 12px; align-items: center; padding: 10px 16px; flex-wrap: wrap; }
+  button { background: #000; color: #3f3; border: 1px solid #3f3; padding: 8px 14px; font: inherit; cursor: pointer; }
+  button:hover { background: #062; }
+  label { display: flex; gap: 6px; align-items: center; }
+  input { width: 60px; background: #000; color: #3f3; border: 1px solid #3f3; font: inherit; padding: 4px; }
+  #status { margin-left: auto; }
+  canvas { flex: 1; width: 100%; min-height: 0; }
+</style>
+</head>
+<body>
+<header>
+  <a href="./" style="color:inherit;text-decoration:none">← Início</a>
+  <button id="conectar">Conectar Arduino</button>
+  <button id="demo">Modo demonstração</button>
+  <label>Alcance da tela (cm) <input id="alcance" type="number" value="100" min="10" max="400"></label>
+  <span id="status">desconectado</span>
+</header>
+<canvas id="tela"></canvas>
+<script>
+const tela = document.getElementById('tela');
+const ctx = tela.getContext('2d');
+const status = document.getElementById('status');
+const alcanceInput = document.getElementById('alcance');
+
+const VERDE = '#3f3';
+const MEMORIA = 15000;    // ms que um objeto fica na tela (mais que uma volta do servo)
+const JANELA = 4;         // graus para cada lado usados na mediana
+const pontos = [];        // pontos[angulo] = { dist, quando }
+let anguloAtual = 90;
+let distAtual = 0;
+const rastro = [];        // últimos ângulos, para o rastro do feixe
+
+// Recebe uma leitura "angulo,distancia" (do Arduino ou da demonstração)
+function leitura(angulo, dist) {
+  anguloAtual = angulo;
+  distAtual = dist;
+  rastro.push(angulo);
+  if (rastro.length > 40) rastro.shift();
+  pontos[angulo] = { dist, quando: performance.now() };
+}
+
+function desenhar() {
+  requestAnimationFrame(desenhar);  // no começo: um erro no desenho não congela a tela
+  const W = tela.width = tela.clientWidth * devicePixelRatio;
+  const H = tela.height = tela.clientHeight * devicePixelRatio;
+  const s = devicePixelRatio;
+  const cx = W / 2, cy = H - 50 * s;
+  const R = Math.min(W / 2 - 55 * s, cy - 40 * s);
+  const alcance = Number(alcanceInput.value) || 100;
+  const pos = (ang, r) => [cx + Math.cos(ang * Math.PI / 180) * r, cy - Math.sin(ang * Math.PI / 180) * r];
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grade: 4 arcos com a distância e linhas a cada 30°
+  ctx.strokeStyle = VERDE;
+  ctx.fillStyle = VERDE;
+  ctx.lineWidth = 1.5 * s;
+  ctx.font = `${13 * s}px monospace`;
+  ctx.globalAlpha = 0.6;
+  for (let i = 1; i <= 4; i++) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * i / 4, Math.PI, 2 * Math.PI);
+    ctx.stroke();
+    ctx.fillText(`${Math.round(alcance * i / 4)}cm`, cx + R * i / 4 + 4 * s, cy + 16 * s);
+  }
+  for (let a = 0; a <= 180; a += 30) {
+    const [x, y] = pos(a, R);
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+    const [tx, ty] = pos(a, R + 14 * s);
+    ctx.fillText(`${a}°`, tx - 12 * s, ty);
+  }
+
+  // Fatia de pizza entre dois ângulos, do raio r1 ao r2 (sobra 0.3° para não ficar fresta)
+  const setor = (a1, a2, r1, r2) => {
+    const [i, f] = [Math.min(a1, a2) - 0.3, Math.max(a1, a2) + 0.3].map(g => -g * Math.PI / 180);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r2, f, i, false);
+    ctx.arc(cx, cy, r1, i, f, true);
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  // Feixe com rastro contínuo que vai apagando
+  ctx.fillStyle = VERDE;
+  for (let i = 1; i < rastro.length; i++) {
+    if (Math.abs(rastro[i] - rastro[i - 1]) > 3) continue;  // pulo de 165 para 15
+    ctx.globalAlpha = i / rastro.length * 0.6;
+    setor(rastro[i - 1], rastro[i], 0, R);
+  }
+
+  // Objetos detectados: ficam até o feixe passar de novo (uma volta leva uns 10 s)
+  const agora = performance.now();
+  const valido = a => {
+    const p = pontos[a];
+    return p && p.dist > 0 && p.dist <= alcance && agora - p.quando < MEMORIA;
+  };
+  // O sensor falha muito (roupa e superfície torta não devolvem o eco), então cada
+  // ângulo usa a mediana das leituras em volta: tapa os buracos e corta os riscos soltos
+  const suave = [];
+  for (let a = 0; a <= 180; a++) {
+    const viz = [];
+    for (let b = a - JANELA; b <= a + JANELA; b++) if (valido(b)) viz.push(pontos[b].dist);
+    if (viz.length >= 3) suave[a] = viz.sort((x, y) => x - y)[viz.length >> 1];
+  }
+  // Cada grau vira uma fatia vermelha do objeto até a borda; brilha logo que o feixe
+  // passa e vai apagando até a próxima volta, como a tela de um radar de verdade
+  ctx.fillStyle = '#f33';
+  suave.forEach((d, a) => {
+    if (d === undefined || !pontos[a]) return;  // ângulo que o feixe ainda não leu
+    ctx.globalAlpha = 1 - (agora - pontos[a].quando) / MEMORIA * 0.8;
+    setor(a - 0.5, a + 0.5, R * d / alcance, R);
+  });
+
+  // Texto de baixo
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = VERDE;
+  ctx.font = `${18 * s}px monospace`;
+  const distTexto = distAtual > 0 && distAtual <= alcance ? `${distAtual} cm` : 'fora de alcance';
+  ctx.fillText(`Ângulo: ${anguloAtual}°    Distância: ${distTexto}`, 20 * s, H - 15 * s);
+
+}
+requestAnimationFrame(desenhar);
+
+// Conexão com o Arduino pela USB (Web Serial, funciona no Chrome e no Edge)
+document.getElementById('conectar').onclick = async () => {
+  if (!('serial' in navigator)) {
+    alert('Este navegador não conecta na USB. Abra no Google Chrome ou no Microsoft Edge.');
+    return;
+  }
+  try {
+    const porta = await navigator.serial.requestPort();
+    await porta.open({ baudRate: 9600 });
+    pararDemo();
+    status.textContent = 'conectado';
+    const decodificador = new TextDecoder();
+    let sobra = '';
+    // Erro de leitura (byte perdido, placa reiniciando pelo servo) derruba só esse
+    // leitor; a porta ganha um readable novo e a gente continua lendo
+    let fim = false;
+    while (porta.readable && !fim) {
+      const leitor = porta.readable.getReader();
+      try {
+        while (true) {
+          const { value, done } = await leitor.read();
+          if (done) { fim = true; break; }
+          const linhas = (sobra + decodificador.decode(value, { stream: true })).split('\n');
+          sobra = linhas.pop();
+          for (const linha of linhas) {
+            const [a, d] = linha.trim().split(',').map(Number);
+            if (Number.isInteger(a) && Number.isInteger(d) && a >= 0 && a <= 180) leitura(a, d);
+          }
+        }
+      } catch (e) {
+        status.textContent = 'conectado (recuperou: ' + e.name + ')';
+        sobra = '';
+      } finally {
+        leitor.releaseLock();
+      }
+    }
+    status.textContent = 'desconectado (cabo saiu ou placa reiniciou), clique em Conectar de novo';
+  } catch (e) {
+    status.textContent = 'erro: ' + e.message;
+  }
+};
+
+// Demonstração sem Arduino: dois objetos de mentira
+let demoTimer = null;
+function pararDemo() { clearInterval(demoTimer); demoTimer = null; }
+document.getElementById('demo').onclick = () => {
+  if (demoTimer) { pararDemo(); status.textContent = 'desconectado'; return; }
+  status.textContent = 'demonstração';
+  let a = 15, dir = 1;
+  demoTimer = setInterval(() => {
+    let d = 0;
+    if (a >= 50 && a <= 65) d = 35;
+    if (a >= 115 && a <= 125) d = 70;
+    leitura(a, d);
+    a += dir;
+    if (a >= 165 || a <= 15) dir = -dir;
+  }, 30);
+};
+</script>
+</body>
+</html>

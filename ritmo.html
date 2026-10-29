@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="comum.css">
+<title>Robótica</title>
+</head>
+<body>
+<script src="comum.js"></script>
+<script>
+montarPagina({
+  id: 'ritmo',
+  titulo: 'Jogo de ritmo',
+  descricao: 'As notas descem pela tela em 4 colunas. Quando a nota chegar na linha, aperte o botão da coluna dela. Cada botão toca uma nota no buzzer (dó, ré, mi e sol), então acertando tudo sai uma música. O LED fica azul no acerto perfeito, verde no acerto e vermelho no erro.',
+  pecas: ['4 botões', 'Buzzer', 'LED RGB', '3 resistores 300 Ω'],
+  ligacoes: [
+    ['Botão 1 (dó)', '2', 'outro canto no trilho −'],
+    ['Botão 2 (ré)', '3', 'outro canto no trilho −'],
+    ['Botão 3 (mi)', '4', 'outro canto no trilho −'],
+    ['Botão 4 (sol)', '12', 'outro canto no trilho −'],
+    ['Buzzer +', '8', 'perna − no trilho −'],
+    ['LED RGB vermelho (R)', '7', 'com resistor 300 Ω'],
+    ['LED RGB verde (G)', '6', 'com resistor 300 Ω'],
+    ['LED RGB azul (B)', '5', 'com resistor 300 Ω; perna maior no −'],
+  ],
+  teclado: 'Sem Arduino: teclas 1, 2, 3 e 4',
+  teclas: { '1': 'B1', '2': 'B2', '3': 'B3', '4': 'B4' },
+});
+
+const NOTAS = [262, 294, 330, 392];
+const CORES = ['#4ea8ff', '#e84393', '#ff9f1c', '#b388ff'];
+const QUEDA = 2;                 // segundos que a nota leva do topo até a linha
+// Música: cada número é a coluna (1 a 4), 0 é pausa; cada item dura um tempo, '.' divide o tempo em dois
+const MUSICA = [
+  '1 1 2 3 | 3 2 1 2 | 3 3 4 4 | 3 2 1 0',
+  '1 1 2 3 | 3 2 1 2 | 3 4 3 2 | 1 0 1 0',
+  '3 3 4 0 | 3 3 4 0 | 2 3 2 1 | 2 0 0 0',
+  '1.2 3 1.2 3 | 3.4 3 2.1 2 | 1.2 3.4 3.2 1 | 4 0 1 0',
+  '1.1 2.3 3.2 1.2 | 3.3 4.4 3.2 1 | 1.2 3.1 2.3 4 | 4 3 1 0',
+];
+const BATIDA = 60 / 104;
+function montarNotas() {
+  const lista = []; let t = 2.5;  // espera 2,5 s antes da primeira nota
+  for (const frase of MUSICA) for (const tempo of frase.replace(/\|/g, '').trim().split(/\s+/)) {
+    const partes = tempo.split('.');
+    partes.forEach((c, i) => { if (c !== '0') lista.push({ t: t + i * BATIDA / partes.length, col: Number(c) - 1 }); });
+    t += BATIDA;
+  }
+  return lista;
+}
+
+let estado = 'parado', notas = [], inicio = 0, pontos = 0, combo = 0, maiorCombo = 0;
+let perfeitos = 0, bons = 0, erros = 0, avisos = [], brilho = [0, 0, 0, 0], fimEm = 0;
+const agoraS = () => (performance.now() - inicio) / 1000;
+
+function comecar() {
+  notas = montarNotas(); inicio = performance.now(); estado = 'jogando';
+  pontos = combo = maiorCombo = perfeitos = bons = erros = 0; avisos = [];
+  Arduino.enviar('o');
+}
+function aviso(txt, cor, col) { avisos.push({ txt, cor, col, t: 0 }); }
+function apertou(col) {
+  bipTeste(NOTAS[col], 150);
+  brilho[col] = 1;
+  if (estado !== 'jogando') { if (estado === 'parado' || performance.now() - fimEm > 2000) comecar(); return; }
+  const t = agoraS();
+  let melhor = null;
+  for (const n of notas) if (!n.feita && n.col === col && Math.abs(n.t - t) < 0.18 && (!melhor || Math.abs(n.t - t) < Math.abs(melhor.t - t))) melhor = n;
+  if (!melhor) { combo = 0; erros++; Arduino.enviar('r'); aviso('fora do tempo', '#ff5470', col); return; }
+  melhor.feita = true; combo++; maiorCombo = Math.max(maiorCombo, combo);
+  if (Math.abs(melhor.t - t) < 0.08) { perfeitos++; pontos += 300 * (1 + Math.floor(combo / 10)); Arduino.enviar('b'); aviso('PERFEITO', '#4ea8ff', col); }
+  else { bons++; pontos += 100 * (1 + Math.floor(combo / 10)); Arduino.enviar('g'); aviso('bom', '#3ddc84', col); }
+}
+Arduino.aoReceber = linha => {
+  const n = { B1: 0, B2: 1, B3: 2, B4: 3 }[linha];
+  if (n !== undefined) apertou(n);
+};
+
+let antes = performance.now();
+function quadro(agora) {
+  requestAnimationFrame(quadro);
+  const dt = Math.min(0.1, (agora - antes) / 1000); antes = agora;
+  const { ctx, W, H, s } = prepararTela();
+  ctx.fillStyle = '#0d1321'; ctx.fillRect(0, 0, W, H);
+  const larg = Math.min(130 * s, W / 6), x0 = W / 2 - larg * 2, linhaY = H - 110 * s;
+
+  for (let c = 0; c < 4; c++) {
+    brilho[c] = Math.max(0, brilho[c] - dt * 4);
+    ctx.fillStyle = c % 2 ? '#121a2c' : '#151f35'; ctx.fillRect(x0 + c * larg, 0, larg, H);
+    ctx.globalAlpha = 0.25 + brilho[c] * 0.75; ctx.fillStyle = CORES[c];
+    ctx.beginPath(); ctx.arc(x0 + c * larg + larg / 2, linhaY, larg * 0.36, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = CORES[c]; ctx.lineWidth = 4 * s;
+    ctx.beginPath(); ctx.arc(x0 + c * larg + larg / 2, linhaY, larg * 0.36, 0, 7); ctx.stroke();
+    texto(ctx, String(c + 1), x0 + c * larg + larg / 2, linhaY + 2 * s, 34 * s, '#fff');
+    texto(ctx, ['dó', 'ré', 'mi', 'sol'][c], x0 + c * larg + larg / 2, linhaY + 70 * s, 20 * s, '#93a1bd', 'center', 500);
+  }
+
+  if (estado === 'jogando') {
+    const t = agoraS();
+    for (const n of notas) {
+      if (!n.feita && t - n.t > 0.18) { n.feita = true; n.perdida = true; combo = 0; erros++; Arduino.enviar('r'); aviso('perdeu', '#ff5470', n.col); }
+      if (n.feita) continue;
+      const y = linhaY - (n.t - t) / QUEDA * linhaY;
+      if (y < -40 * s) continue;
+      ctx.fillStyle = CORES[n.col];
+      ctx.beginPath(); ctx.roundRect(x0 + n.col * larg + larg * 0.14, y - 16 * s, larg * 0.72, 32 * s, 12 * s); ctx.fill();
+    }
+    if (notas.every(n => n.feita) && t > notas[notas.length - 1].t + 1) {
+      estado = 'fim'; fimEm = performance.now(); recorde('ritmo', pontos); Arduino.enviar('o');
+    }
+  }
+  for (const a of avisos) {
+    a.t += dt; ctx.globalAlpha = Math.max(0, 1 - a.t * 1.5);
+    texto(ctx, a.txt, x0 + a.col * larg + larg / 2, linhaY - 70 * s - a.t * 60 * s, 22 * s, a.cor);
+    ctx.globalAlpha = 1;
+  }
+  avisos = avisos.filter(a => a.t < 0.7);
+
+  texto(ctx, `${pontos}`, 40 * s, 44 * s, 40 * s, '#fff', 'left');
+  texto(ctx, combo >= 5 ? `combo ${combo}` : '', 40 * s, 90 * s, 26 * s, '#ffd166', 'left');
+  texto(ctx, `recorde ${recorde('ritmo', 0)}`, W - 40 * s, 44 * s, 20 * s, '#93a1bd', 'right', 500);
+  if (estado !== 'jogando') {
+    ctx.fillStyle = 'rgba(13,19,33,.82)'; ctx.fillRect(0, 0, W, H);
+    if (estado === 'parado') {
+      texto(ctx, 'RITMO', W / 2, H / 2 - 80 * s, 90 * s, '#fff');
+      texto(ctx, 'aperte o botão quando a nota chegar no círculo', W / 2, H / 2 - 10 * s, 26 * s, '#93a1bd', 'center', 500);
+    } else {
+      const total = perfeitos + bons + notas.filter(n => n.perdida).length;
+      texto(ctx, `${pontos} pontos`, W / 2, H / 2 - 90 * s, 70 * s, '#fff');
+      texto(ctx, `${perfeitos} perfeitos · ${bons} bons · ${erros} erros · maior combo ${maiorCombo}`, W / 2, H / 2 - 20 * s, 26 * s, '#93a1bd', 'center', 500);
+      texto(ctx, `acertou ${Math.round((perfeitos + bons) / Math.max(1, total) * 100)}% das notas`, W / 2, H / 2 + 20 * s, 26 * s, '#3ddc84', 'center', 600);
+    }
+    texto(ctx, 'Aperte qualquer botão para começar', W / 2, H / 2 + 80 * s, 26 * s, '#ffd166', 'center', 500);
+  }
+}
+requestAnimationFrame(quadro);
+</script>
+</body>
+</html>

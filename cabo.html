@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="comum.css">
+<title>Robótica</title>
+</head>
+<body>
+<script src="comum.js"></script>
+<script>
+montarPagina({
+  id: 'cabo',
+  titulo: 'Cabo de guerra',
+  descricao: 'Dois jogadores, um botão para cada. Depois do "JÁ!", aperte o mais rápido que conseguir: cada aperto puxa a corda para o seu lado. Quem trouxer a bandeira até a sua linha ganha a rodada. Ganha o jogo quem vencer 2 rodadas. O LED mostra a cor de quem está ganhando.',
+  pecas: ['2 botões', 'Buzzer', 'LED RGB', '3 resistores 300 Ω'],
+  ligacoes: [
+    ['Botão jogador 1 (vermelho)', '2', 'outro canto no trilho −'],
+    ['Botão jogador 2 (azul)', '3', 'outro canto no trilho −'],
+    ['Buzzer +', '8', 'perna − no trilho −'],
+    ['LED RGB vermelho (R)', '7', 'com resistor 300 Ω'],
+    ['LED RGB verde (G)', '6', 'com resistor 300 Ω'],
+    ['LED RGB azul (B)', '5', 'com resistor 300 Ω; perna maior no −'],
+  ],
+  passosExtras: ['Dica: ligue os botões com fios compridos para cada jogador ficar de um lado da mesa.'],
+  teclado: 'Sem Arduino: tecla A (jogador 1) e tecla L (jogador 2)',
+  teclas: { a: 'B1', l: 'B2' },
+});
+
+const PUXAO = 0.045;        // quanto cada aperto anda (1 = chegou na linha)
+const VERMELHO = '#ff5470', AZUL = '#4ea8ff';
+let estado = 'parado';      // parado, contagem, puxando, rodada, campeao
+let pos = 0, vitorias = [0, 0], contagem = 0, rodada = 0, liderAntes = '';
+let cliques = [[], []], ganhador = -1, tremer = 0, fimEm = 0;
+
+function novaRodada() {
+  pos = 0; contagem = 3.99; estado = 'contagem'; rodada++; liderAntes = ''; cliques = [[], []];
+  Arduino.enviar('o');
+}
+function comecar() { vitorias = [0, 0]; rodada = 0; novaRodada(); }
+
+function puxar(j) {
+  if (estado === 'parado' || (estado === 'campeao' && performance.now() - fimEm > 2500)) return comecar();
+  if (estado !== 'puxando') return;
+  pos += j === 0 ? -PUXAO : PUXAO;
+  cliques[j].push(performance.now());
+  tremer = 0.15;
+  const lider = pos < -0.05 ? 'r' : pos > 0.05 ? 'b' : 'y';
+  if (lider !== liderAntes) { Arduino.enviar(lider); liderAntes = lider; }
+  if (Math.abs(pos) >= 1) {
+    ganhador = pos < 0 ? 0 : 1;
+    vitorias[ganhador]++;
+    Arduino.enviar('f'); bipTeste(988, 400);
+    estado = vitorias[ganhador] >= 2 ? 'campeao' : 'rodada';
+    if (estado === 'rodada') setTimeout(novaRodada, 2500);
+    else { fimEm = performance.now(); recorde('cabo', 0); }
+  }
+}
+Arduino.aoReceber = linha => {
+  if (linha === 'B1') puxar(0);
+  if (linha === 'B2') puxar(1);
+};
+
+function boneco(ctx, x, y, cor, lado, s, inclina) {
+  ctx.strokeStyle = cor; ctx.lineWidth = 7 * s; ctx.lineCap = 'round';
+  ctx.save(); ctx.translate(x, y); ctx.rotate(lado * inclina);
+  ctx.beginPath(); ctx.arc(0, -86 * s, 16 * s, 0, 7); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -70 * s); ctx.lineTo(0, -20 * s);
+  ctx.moveTo(0, -55 * s); ctx.lineTo(-lado * 30 * s, -40 * s);
+  ctx.moveTo(0, -20 * s); ctx.lineTo(-lado * 18 * s, 18 * s);
+  ctx.moveTo(0, -20 * s); ctx.lineTo(lado * 14 * s, 18 * s); ctx.stroke();
+  ctx.restore();
+}
+
+let antes = performance.now();
+function quadro(agora) {
+  requestAnimationFrame(quadro);
+  const dt = Math.min(0.1, (agora - antes) / 1000); antes = agora;
+  const { ctx, W, H, s } = prepararTela();
+  ctx.fillStyle = '#0d1321'; ctx.fillRect(0, 0, W, H);
+  // metade de cada time
+  ctx.fillStyle = 'rgba(255,84,112,.08)'; ctx.fillRect(0, 0, W / 2, H);
+  ctx.fillStyle = 'rgba(78,168,255,.08)'; ctx.fillRect(W / 2, 0, W / 2, H);
+
+  const cy = H * 0.55, meio = W / 2, alcance = W * 0.3;
+  const dx = pos * alcance + (tremer > 0 ? (Math.random() - 0.5) * 6 * s : 0);
+  tremer -= dt;
+  // linhas de chegada e do meio
+  ctx.setLineDash([12 * s, 10 * s]); ctx.lineWidth = 3 * s;
+  ctx.strokeStyle = VERMELHO; ctx.beginPath(); ctx.moveTo(meio - alcance, cy - 140 * s); ctx.lineTo(meio - alcance, cy + 60 * s); ctx.stroke();
+  ctx.strokeStyle = AZUL; ctx.beginPath(); ctx.moveTo(meio + alcance, cy - 140 * s); ctx.lineTo(meio + alcance, cy + 60 * s); ctx.stroke();
+  ctx.strokeStyle = '#93a1bd'; ctx.beginPath(); ctx.moveTo(meio, cy - 140 * s); ctx.lineTo(meio, cy + 60 * s); ctx.stroke();
+  ctx.setLineDash([]);
+  // corda
+  ctx.strokeStyle = '#c8a26b'; ctx.lineWidth = 10 * s;
+  ctx.beginPath(); ctx.moveTo(W * 0.04, cy - 40 * s); ctx.lineTo(W * 0.96, cy - 40 * s); ctx.stroke();
+  // bonecos: três de cada lado, presos na corda
+  const inclina = 0.25 + Math.min(0.2, Math.abs(pos) * 0.2);
+  for (let i = 0; i < 3; i++) {
+    boneco(ctx, meio + dx - alcance - 40 * s - i * 70 * s, cy + 20 * s, VERMELHO, 1, s, -inclina);
+    boneco(ctx, meio + dx + alcance + 40 * s + i * 70 * s, cy + 20 * s, AZUL, -1, s, inclina);
+  }
+  // bandeira no meio da corda
+  ctx.fillStyle = '#ffd166';
+  ctx.fillRect(meio + dx - 3 * s, cy - 110 * s, 6 * s, 80 * s);
+  ctx.beginPath(); ctx.moveTo(meio + dx, cy - 110 * s); ctx.lineTo(meio + dx + 50 * s, cy - 92 * s); ctx.lineTo(meio + dx, cy - 74 * s); ctx.fill();
+
+  // placar
+  const vel = j => cliques[j].filter(t => performance.now() - t < 1000).length;
+  texto(ctx, 'JOGADOR 1', W * 0.2, 50 * s, 28 * s, VERMELHO);
+  texto(ctx, 'JOGADOR 2', W * 0.8, 50 * s, 28 * s, AZUL);
+  texto(ctx, '●'.repeat(vitorias[0]) + '○'.repeat(2 - vitorias[0]), W * 0.2, 95 * s, 34 * s, VERMELHO);
+  texto(ctx, '●'.repeat(vitorias[1]) + '○'.repeat(2 - vitorias[1]), W * 0.8, 95 * s, 34 * s, AZUL);
+  if (estado === 'puxando') {
+    texto(ctx, `${vel(0)} por segundo`, W * 0.2, H - 50 * s, 22 * s, '#93a1bd', 'center', 500);
+    texto(ctx, `${vel(1)} por segundo`, W * 0.8, H - 50 * s, 22 * s, '#93a1bd', 'center', 500);
+  }
+  texto(ctx, rodada ? `Rodada ${rodada}` : '', W / 2, 50 * s, 24 * s, '#93a1bd', 'center', 500);
+
+  if (estado === 'contagem') {
+    const antesN = Math.ceil(contagem);
+    contagem -= dt;
+    if (Math.ceil(contagem) < antesN && contagem > 0) { Arduino.enviar('t'); bipTeste(1000, 60); }
+    if (contagem <= 0) { estado = 'puxando'; Arduino.enviar('a'); Arduino.enviar('y'); bipTeste(1600, 300); }
+    texto(ctx, contagem > 3 ? 'Preparar...' : String(Math.ceil(contagem)), W / 2, H * 0.25, 90 * s, '#fff');
+  }
+  if (estado === 'puxando' && performance.now() % 1000 < 600 && cliques[0].length + cliques[1].length < 3) texto(ctx, 'JÁ!', W / 2, H * 0.25, 90 * s, '#3ddc84');
+  if (estado === 'rodada') texto(ctx, `Jogador ${ganhador + 1} ganhou a rodada!`, W / 2, H * 0.22, 52 * s, ganhador ? AZUL : VERMELHO);
+  if (estado === 'campeao') {
+    texto(ctx, `JOGADOR ${ganhador + 1} VENCEU!`, W / 2, H * 0.2, 70 * s, ganhador ? AZUL : VERMELHO);
+    texto(ctx, 'Aperte um botão para jogar de novo', W / 2, H * 0.2 + 60 * s, 24 * s, '#ffd166', 'center', 500);
+  }
+  if (estado === 'parado') {
+    texto(ctx, 'CABO DE GUERRA', W / 2, H * 0.2, 70 * s, '#fff');
+    texto(ctx, 'Aperte um botão para começar · ganha quem vencer 2 rodadas', W / 2, H * 0.2 + 60 * s, 24 * s, '#ffd166', 'center', 500);
+  }
+}
+requestAnimationFrame(quadro);
+</script>
+</body>
+</html>

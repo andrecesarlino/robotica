@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sensor de ré Arduino</title>
+<style>
+  :root { --verde: #2ecc71; --amarelo: #f1c40f; --vermelho: #ff3b30; --apagado: #1d2427; }
+  html, body { margin: 0; height: 100%; background: #0b0f10; color: #e8f1ee; font-family: system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  header { display: flex; gap: 12px; align-items: center; padding: 10px 16px; flex-wrap: wrap; font-family: monospace; }
+  button { background: #0b0f10; color: #e8f1ee; border: 1px solid #e8f1ee; padding: 8px 14px; font: inherit; cursor: pointer; }
+  button:hover { background: #1d2427; }
+  label { display: flex; gap: 6px; align-items: center; }
+  input { width: 56px; background: #0b0f10; color: #e8f1ee; border: 1px solid #e8f1ee; font: inherit; padding: 4px; }
+  #status { margin-left: auto; }
+  main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-height: 0; }
+  svg { width: min(92vw, 640px); height: auto; }
+  #numero { font-size: clamp(56px, 14vw, 140px); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  #aviso { font-size: clamp(22px, 4vw, 36px); font-weight: 600; letter-spacing: 2px; }
+</style>
+</head>
+<body>
+<header>
+  <a href="./" style="color:inherit;text-decoration:none">← Início</a>
+  <button id="conectar">Conectar Arduino</button>
+  <button id="demo">Modo demonstração</button>
+  <label>Amarelo abaixo de <input id="limAmarelo" type="number" value="30" min="1"> cm</label>
+  <label>Vermelho abaixo de <input id="limVermelho" type="number" value="10" min="1"> cm</label>
+  <span id="status">desconectado</span>
+</header>
+<main>
+  <!-- Carro visto de cima, com as três faixas de aviso atrás do para-choque -->
+  <svg viewBox="0 0 400 345" aria-label="Carro visto de cima com três faixas de aviso atrás dele">
+    <rect x="130" y="10" width="140" height="150" rx="28" fill="#3a4448"/>
+    <rect x="145" y="30" width="110" height="40" rx="8" fill="#0b0f10"/>
+    <rect x="145" y="115" width="110" height="30" rx="8" fill="#0b0f10"/>
+    <circle cx="200" cy="168" r="6" fill="#e8f1ee"/>
+    <path id="faixa1" d="M120 200 Q200 240 280 200" fill="none" stroke-width="22" stroke-linecap="round"/>
+    <path id="faixa2" d="M85 245 Q200 300 315 245" fill="none" stroke-width="22" stroke-linecap="round"/>
+    <path id="faixa3" d="M50 290 Q200 360 350 290" fill="none" stroke-width="22" stroke-linecap="round"/>
+  </svg>
+  <div id="numero">--</div>
+  <div id="aviso">sem leitura</div>
+</main>
+<script>
+const status = document.getElementById('status');
+const numero = document.getElementById('numero');
+const aviso = document.getElementById('aviso');
+const faixas = [1, 2, 3].map(i => document.getElementById('faixa' + i));
+const limAmarelo = document.getElementById('limAmarelo');
+const limVermelho = document.getElementById('limVermelho');
+const COR = { verde: 'var(--verde)', amarelo: 'var(--amarelo)', vermelho: 'var(--vermelho)', apagado: 'var(--apagado)' };
+
+// Mesma decisão em escada dos blocos: primeiro o vermelho, depois o amarelo
+function nivel(dist, amarelo, vermelho) {
+  if (!(dist > 0)) return 'sem';  // 0 = o eco não voltou
+  if (dist < vermelho) return 'vermelho';
+  if (dist < amarelo) return 'amarelo';
+  return 'verde';
+}
+
+// Recebe uma distância (do Arduino ou da demonstração) e redesenha
+function leitura(dist) {
+  const n = nivel(dist, Number(limAmarelo.value) || 30, Number(limVermelho.value) || 10);
+  numero.textContent = n === 'sem' ? '--' : `${dist} cm`;
+  const acesas = { sem: 0, verde: 1, amarelo: 2, vermelho: 3 }[n];
+  // faixa3 é a de fora (verde): acende primeiro; faixa1, colada no carro, só no vermelho
+  const cores = [COR.vermelho, COR.amarelo, COR.verde];
+  faixas.forEach((f, i) => f.setAttribute('stroke', 3 - i <= acesas ? cores[i] : COR.apagado));
+  numero.style.color = n === 'sem' ? '#6f8c87' : COR[n];
+  aviso.style.color = numero.style.color;
+  aviso.textContent = { sem: 'sem leitura', verde: 'LONGE', amarelo: 'PERTO', vermelho: 'MUITO PERTO' }[n];
+}
+leitura(0);
+
+// A linha pode ser só "23" (sensor de ré) ou "90,23" (radar): vale o último número
+function distanciaDaLinha(linha) {
+  const partes = linha.trim().split(',');
+  const d = Number(partes[partes.length - 1]);
+  return linha.trim() !== '' && Number.isFinite(d) ? Math.round(d) : null;
+}
+
+// Conexão com o Arduino pela USB (Web Serial, funciona no Chrome e no Edge)
+document.getElementById('conectar').onclick = async () => {
+  if (!('serial' in navigator)) {
+    alert('Este navegador não conecta na USB. Abra no Google Chrome ou no Microsoft Edge.');
+    return;
+  }
+  try {
+    const porta = await navigator.serial.requestPort();
+    await porta.open({ baudRate: 9600 });
+    pararDemo();
+    status.textContent = 'conectado';
+    const decodificador = new TextDecoder();
+    let sobra = '';
+    let fim = false;
+    while (porta.readable && !fim) {
+      const leitor = porta.readable.getReader();
+      try {
+        while (true) {
+          const { value, done } = await leitor.read();
+          if (done) { fim = true; break; }
+          const linhas = (sobra + decodificador.decode(value, { stream: true })).split('\n');
+          sobra = linhas.pop();
+          for (const linha of linhas) {
+            const d = distanciaDaLinha(linha);
+            if (d !== null) leitura(d);
+          }
+        }
+      } catch (e) {
+        status.textContent = 'conectado (recuperou: ' + e.name + ')';
+        sobra = '';
+      } finally {
+        leitor.releaseLock();
+      }
+    }
+    status.textContent = 'desconectado (cabo saiu ou placa reiniciou), clique em Conectar de novo';
+  } catch (e) {
+    status.textContent = 'erro: ' + e.message;
+  }
+};
+
+// Demonstração sem Arduino: um objeto chegando perto e se afastando
+let demoTimer = null;
+function pararDemo() { clearInterval(demoTimer); demoTimer = null; }
+document.getElementById('demo').onclick = () => {
+  if (demoTimer) { pararDemo(); status.textContent = 'desconectado'; leitura(0); return; }
+  status.textContent = 'demonstração';
+  let d = 60, passo = -2;
+  demoTimer = setInterval(() => {
+    leitura(d);
+    d += passo;
+    if (d <= 4 || d >= 60) passo = -passo;
+  }, 200);
+};
+
+// Autoteste rápido da decisão e da leitura da linha (aparece no console)
+console.assert(nivel(5, 30, 10) === 'vermelho' && nivel(20, 30, 10) === 'amarelo' && nivel(45, 30, 10) === 'verde' && nivel(0, 30, 10) === 'sem', 'nivel');
+console.assert(distanciaDaLinha('23\r') === 23 && distanciaDaLinha('90,41') === 41 && distanciaDaLinha('') === null && distanciaDaLinha('abc') === null, 'linha');
+</script>
+</body>
+</html>

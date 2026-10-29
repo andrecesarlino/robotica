@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="comum.css">
+<title>Robótica</title>
+</head>
+<body>
+<script src="comum.js"></script>
+<script>
+montarPagina({
+  id: 'pescaria',
+  titulo: 'Pescaria com a garra',
+  descricao: 'Segure a garra na mão e abra e feche pelo joystick. Espalhe bolinhas de papel na mesa e coloque um pote com o sensor ultrassônico na boca, olhando para o fundo. Cada bolinha que cair no pote vale 1 ponto. São 60 segundos por equipe, e a tela guarda o ranking da turma.',
+  pecas: ['Servo com a garra', 'Joystick', 'Sensor ultrassônico', 'Buzzer', 'Pote ou copo', 'Bolinhas de papel'],
+  ligacoes: [
+    ['Servo da garra (fio laranja)', '9', 'marrom no −, vermelho no + de cima'],
+    ['Joystick VRx', 'A0', '+5V no +, GND no − de cima'],
+    ['Ultrassônico Trig', '10', 'VCC no +, GND no −'],
+    ['Ultrassônico Echo', '11', ''],
+    ['Buzzer +', '8', 'perna − no trilho −'],
+  ],
+  passosExtras: [
+    'Monte a garra no servo com ele parado em 60 graus (garra fechada), como na aula 4.',
+    'Prenda o sensor na boca do pote olhando para o fundo. Quando a contagem começa, o Arduino mede o pote vazio: deixe o pote vazio nessa hora.',
+  ],
+  teclado: 'Sem Arduino: tecla P marca ponto',
+  teclas: { p: 'PONTO' },
+});
+
+const DURACAO = 60;
+let estado = 'parado', pontos = 0, restante = DURACAO, contagem = 0, fundo = null, bolas = [], equipe = '';
+let ranking = [];
+try { ranking = JSON.parse(localStorage.getItem('ranking-pescaria')) || []; } catch (e) {}
+
+// equipe e botão de começar na barra de cima
+document.querySelector('.barra .dica').insertAdjacentHTML('beforebegin',
+  '<input id="equipe" placeholder="Nome da equipe" style="font:inherit;padding:9px 12px;border-radius:10px;border:1px solid #26324d;background:#0a0f1a;color:#e8edf7;width:190px">' +
+  '<button id="comecar">Começar (60 s)</button>');
+document.getElementById('comecar').onclick = comecar;
+
+function comecar() {
+  if (estado === 'contagem' || estado === 'jogando') return;
+  equipe = document.getElementById('equipe').value.trim() || 'Equipe sem nome';
+  pontos = 0; bolas = []; restante = DURACAO; contagem = 3.99; estado = 'contagem';
+  Arduino.enviar('c');  // mede o pote vazio
+}
+Arduino.aoReceber = linha => {
+  if (linha.startsWith('FUNDO')) fundo = Number(linha.slice(5));
+  if (linha === 'PONTO' && estado === 'jogando') {
+    pontos++;
+    bolas.push({ x: (Math.random() - 0.5) * 0.6, y: -1, vy: 0, cor: ['#ffd166', '#e8edf7', '#4ea8ff', '#ff9f1c'][pontos % 4] });
+    Arduino.enviar('a'); bipTeste(1500, 120);
+  }
+};
+
+let antes = performance.now();
+function quadro(agora) {
+  requestAnimationFrame(quadro);
+  const dt = Math.min(0.1, (agora - antes) / 1000); antes = agora;
+  const { ctx, W, H, s } = prepararTela();
+  ctx.fillStyle = '#0d1321'; ctx.fillRect(0, 0, W, H);
+
+  if (estado === 'contagem') {
+    const n = Math.ceil(contagem); contagem -= dt;
+    if (Math.ceil(contagem) < n && contagem > 0) { Arduino.enviar('t'); bipTeste(1000, 60); }
+    if (contagem <= 0) { estado = 'jogando'; Arduino.enviar('a'); bipTeste(1500, 200); }
+  }
+  if (estado === 'jogando') {
+    restante -= dt;
+    if (restante <= 0) {
+      restante = 0; estado = 'fim'; Arduino.enviar('f'); bipTeste(440, 500);
+      ranking.push({ equipe, pontos });
+      ranking.sort((a, b) => b.pontos - a.pontos);
+      ranking = ranking.slice(0, 8);
+      try { localStorage.setItem('ranking-pescaria', JSON.stringify(ranking)); } catch (e) {}
+    }
+  }
+
+  // pote
+  const area = W * 0.62, cx = area / 2, py = H * 0.38, pw = Math.min(area * 0.5, 340 * s), ph = H * 0.48;
+  ctx.fillStyle = '#1d2740'; ctx.strokeStyle = '#4ea8ff'; ctx.lineWidth = 6 * s;
+  ctx.beginPath(); ctx.moveTo(cx - pw / 2, py); ctx.lineTo(cx - pw * 0.4, py + ph); ctx.lineTo(cx + pw * 0.4, py + ph); ctx.lineTo(cx + pw / 2, py); ctx.fill(); ctx.stroke();
+  // bolinhas caindo e empilhando
+  const r = 16 * s, porLinha = Math.max(1, Math.floor(pw * 0.75 / (2 * r)));
+  bolas.forEach((b, i) => {
+    const linha = Math.floor(i / porLinha), colB = i % porLinha;
+    const alvoY = py + ph - r - linha * r * 1.7;
+    const alvoX = cx - (porLinha - 1) * r + colB * 2 * r + (linha % 2) * r * 0.5;
+    if (b.y < 0) { b.y = py - 160 * s; b.x = alvoX; }
+    if (b.y < alvoY) { b.vy += 2600 * s * dt; b.y = Math.min(alvoY, b.y + b.vy * dt); }
+    ctx.fillStyle = b.cor; ctx.beginPath(); ctx.arc(b.x, Math.min(b.y, alvoY), r, 0, 7); ctx.fill();
+  });
+  texto(ctx, String(pontos), cx, py - 70 * s, 110 * s, '#fff');
+
+  // relógio em anel
+  const rx = area * 0.12, ry = H * 0.2, rr = 60 * s;
+  ctx.lineWidth = 12 * s; ctx.strokeStyle = '#26324d'; ctx.beginPath(); ctx.arc(rx, ry, rr, 0, 7); ctx.stroke();
+  ctx.strokeStyle = restante > 10 ? '#3ddc84' : '#ff5470';
+  ctx.beginPath(); ctx.arc(rx, ry, rr, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * restante / DURACAO); ctx.stroke();
+  texto(ctx, String(Math.ceil(restante)), rx, ry + 2 * s, 44 * s, '#fff');
+  if (fundo !== null) texto(ctx, fundo > 0 ? `pote: ${fundo} cm até o fundo` : 'o sensor não mediu o pote: confira os fios', 20 * s, H - 24 * s, 18 * s, fundo > 0 ? '#93a1bd' : '#ff5470', 'left', 500);
+
+  // ranking
+  const kx = W * 0.66, kw = W * 0.31;
+  ctx.fillStyle = '#151d30'; ctx.beginPath(); ctx.roundRect(kx, 30 * s, kw, H - 60 * s, 20 * s); ctx.fill();
+  texto(ctx, 'RANKING DA TURMA', kx + kw / 2, 70 * s, 26 * s, '#ffd166');
+  ranking.forEach((e, i) => {
+    const y = 125 * s + i * 52 * s;
+    const destaque = estado === 'fim' && e.equipe === equipe && e.pontos === pontos;
+    texto(ctx, `${i + 1}º`, kx + 30 * s, y, 24 * s, destaque ? '#3ddc84' : '#93a1bd', 'left');
+    texto(ctx, e.equipe.slice(0, 18), kx + 80 * s, y, 24 * s, destaque ? '#3ddc84' : '#fff', 'left', 600);
+    texto(ctx, String(e.pontos), kx + kw - 30 * s, y, 26 * s, destaque ? '#3ddc84' : '#fff', 'right');
+  });
+  if (!ranking.length) texto(ctx, 'nenhuma equipe jogou ainda', kx + kw / 2, 130 * s, 20 * s, '#93a1bd', 'center', 500);
+
+  if (estado === 'parado') texto(ctx, 'Escreva o nome da equipe e clique em Começar', cx, H * 0.2, 26 * s, '#ffd166', 'center', 500);
+  if (estado === 'contagem') texto(ctx, contagem > 3 ? 'Deixe o pote vazio...' : String(Math.ceil(contagem)), cx, H * 0.2, 60 * s, '#ffd166');
+  if (estado === 'fim') texto(ctx, `Fim! ${equipe}: ${pontos} ${pontos === 1 ? 'ponto' : 'pontos'}`, cx, H * 0.2, 40 * s, '#3ddc84');
+}
+requestAnimationFrame(quadro);
+</script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="comum.css">
+<title>Robótica</title>
+</head>
+<body>
+<script src="comum.js"></script>
+<script>
+montarPagina({
+  id: 'quiz',
+  titulo: 'Quiz de botões',
+  descricao: 'A pergunta aparece na tela com duas respostas. Aperte o botão A ou o botão B. Acertou, acende o LED verde; errou, acende o vermelho e o buzzer apita. Quanto mais rápido responder, mais pontos. São 10 perguntas por partida.',
+  pecas: ['2 botões', 'LED verde', 'LED vermelho', 'Buzzer', '2 resistores 300 Ω'],
+  ligacoes: [
+    ['Botão A', '2', 'outro canto no trilho −'],
+    ['Botão B', '3', 'outro canto no trilho −'],
+    ['LED verde (perna +)', '6', 'perna − com resistor 300 Ω ao −'],
+    ['LED vermelho (perna +)', '7', 'perna − com resistor 300 Ω ao −'],
+    ['Buzzer +', '8', 'perna − no trilho −'],
+  ],
+  teclado: 'Sem Arduino: tecla A e tecla B',
+  teclas: { a: 'B1', b: 'B2' },
+});
+
+// [pergunta, resposta certa, resposta errada]
+const PERGUNTAS = [
+  ['Qual pino lê valores de 0 a 1023?', 'Pino analógico (A0)', 'Pino digital (2)'],
+  ['O que faz o delay(1000)?', 'Espera 1 segundo', 'Espera 1000 segundos'],
+  ['O sensor ultrassônico mede a distância usando...', 'Som', 'Luz'],
+  ['Qual animal se guia pelo eco, como o sensor ultrassônico?', 'Morcego', 'Coruja'],
+  ['A perna maior do LED é a...', 'Positiva (+)', 'Negativa (−)'],
+  ['O LDR muda de valor com...', 'A luz', 'O barulho'],
+  ['O micro servo do kit gira até...', '180 graus', '720 graus'],
+  ['O que vai dentro do setup()?', 'O que roda uma vez só', 'O que repete para sempre'],
+  ['Para que serve o resistor junto do LED?', 'Limitar a corrente', 'Deixar o LED colorido'],
+  ['INPUT_PULLUP é usado para ler...', 'Um botão', 'Um LED'],
+  ['O LED RGB mistura quais cores?', 'Vermelho, verde e azul', 'Vermelho, amarelo e azul'],
+  ['O que o if faz no programa?', 'Toma uma decisão', 'Repete para sempre'],
+  ['Para que serve o Monitor Serial?', 'Ver o que o Arduino manda', 'Carregar a placa'],
+  ['Vermelho e verde acesos juntos no LED RGB dão...', 'Amarelo', 'Roxo'],
+  ['O DHT11 mede...', 'Temperatura e umidade', 'Distância'],
+  ['No Arduino, GND é o...', 'Negativo', 'Positivo'],
+  ['O que faz o tone(8, 440)?', 'Toca uma nota no pino 8', 'Acende o LED do pino 8'],
+  ['O loop() roda...', 'Para sempre, repetindo', 'Uma vez só'],
+  ['O potenciômetro é uma peça de...', 'Entrada', 'Saída'],
+  ['O buzzer é uma peça de...', 'Saída', 'Entrada'],
+  ['Na protoboard, os furos de uma mesma coluna (a até e)...', 'Estão ligados entre si', 'Não se ligam'],
+  ['Qual destes é um sensor?', 'LDR', 'Buzzer'],
+];
+const POR_PARTIDA = 10, TEMPO = 10;
+let estado = 'parado', fila = [], atual = null, numero = 0, pontos = 0, acertos = 0;
+let restante = TEMPO, resposta = null, ultimoTique = 0, fimEm = 0;
+
+function comecar() {
+  fila = [...PERGUNTAS].sort(() => Math.random() - 0.5).slice(0, POR_PARTIDA);
+  numero = 0; pontos = 0; acertos = 0; estado = 'jogando';
+  proxima();
+}
+function proxima() {
+  if (numero >= POR_PARTIDA) { estado = 'fim'; fimEm = performance.now(); recorde('quiz', pontos); Arduino.enviar('o'); return; }
+  const [p, certa, errada] = fila[numero++];
+  const certaEmA = Math.random() < 0.5;
+  atual = { p, a: certaEmA ? certa : errada, b: certaEmA ? errada : certa, certa: certaEmA ? 'A' : 'B' };
+  restante = TEMPO; resposta = null; ultimoTique = TEMPO;
+  Arduino.enviar('o');
+}
+function responder(letra) {
+  if (estado === 'parado' || (estado === 'fim' && performance.now() - fimEm > 1500)) return comecar();
+  if (estado !== 'jogando' || resposta) return;
+  resposta = letra;
+  if (letra === atual.certa) {
+    acertos++; pontos += 100 + Math.round(restante * 10);
+    Arduino.enviar('g'); bipTeste(1200, 150);
+  } else {
+    Arduino.enviar('r'); bipTeste(200, 400);
+  }
+  setTimeout(proxima, 1800);
+}
+Arduino.aoReceber = linha => {
+  if (linha === 'B1') responder('A');
+  if (linha === 'B2') responder('B');
+};
+
+function cartao(ctx, x, y, w, h, letra, txt, cor, s) {
+  let fundo = '#151d30', borda = cor;
+  if (resposta) {
+    if (letra === atual.certa) { fundo = '#123d27'; borda = '#3ddc84'; }
+    else if (letra === resposta) { fundo = '#4a1622'; borda = '#ff5470'; }
+  }
+  ctx.fillStyle = fundo; ctx.strokeStyle = borda; ctx.lineWidth = 4 * s;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, 24 * s); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = cor; ctx.beginPath(); ctx.arc(x + 60 * s, y + h / 2, 36 * s, 0, 7); ctx.fill();
+  texto(ctx, letra, x + 60 * s, y + h / 2 + 2 * s, 40 * s, '#0d1321');
+  ctx.save(); ctx.beginPath(); ctx.rect(x + 110 * s, y, w - 120 * s, h); ctx.clip();
+  texto(ctx, txt, x + 120 * s, y + h / 2, Math.min(36 * s, w / 18), '#fff', 'left', 600);
+  ctx.restore();
+}
+
+let antes = performance.now();
+function quadro(agora) {
+  requestAnimationFrame(quadro);
+  const dt = Math.min(0.1, (agora - antes) / 1000); antes = agora;
+  const { ctx, W, H, s } = prepararTela();
+  ctx.fillStyle = '#0d1321'; ctx.fillRect(0, 0, W, H);
+
+  if (estado === 'parado' || estado === 'fim') {
+    if (estado === 'parado') {
+      texto(ctx, 'QUIZ', W / 2, H / 2 - 80 * s, 90 * s, '#fff');
+      texto(ctx, `${POR_PARTIDA} perguntas sobre o curso`, W / 2, H / 2, 28 * s, '#93a1bd', 'center', 500);
+    } else {
+      texto(ctx, `${acertos} de ${POR_PARTIDA} certas`, W / 2, H / 2 - 80 * s, 64 * s, '#3ddc84');
+      texto(ctx, `${pontos} pontos · recorde ${recorde('quiz', 0)}`, W / 2, H / 2, 30 * s, '#fff', 'center', 500);
+    }
+    texto(ctx, 'Aperte A ou B para começar', W / 2, H / 2 + 70 * s, 26 * s, '#ffd166', 'center', 500);
+    return;
+  }
+  if (!resposta) {
+    restante -= dt;
+    if (restante <= 3 && Math.ceil(restante) < ultimoTique) { ultimoTique = Math.ceil(restante); Arduino.enviar('t'); bipTeste(1500, 20); }
+    if (restante <= 0) { restante = 0; resposta = 'nenhuma'; Arduino.enviar('r'); bipTeste(200, 400); setTimeout(proxima, 1800); }
+  }
+  texto(ctx, `Pergunta ${numero} de ${POR_PARTIDA}`, 40 * s, 40 * s, 22 * s, '#93a1bd', 'left', 500);
+  texto(ctx, `${pontos} pontos`, W - 40 * s, 40 * s, 26 * s, '#fff', 'right');
+  // barra de tempo
+  ctx.fillStyle = '#26324d'; ctx.fillRect(40 * s, 70 * s, W - 80 * s, 10 * s);
+  ctx.fillStyle = restante > 3 ? '#4ea8ff' : '#ff5470'; ctx.fillRect(40 * s, 70 * s, (W - 80 * s) * restante / TEMPO, 10 * s);
+
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+  texto(ctx, atual.p, W / 2, H * 0.32, Math.min(52 * s, W / 26), '#fff');
+  ctx.restore();
+  const cw = Math.min(560 * s, (W - 120 * s) / 2), ch = 150 * s, cy = H * 0.55;
+  cartao(ctx, W / 2 - cw - 20 * s, cy, cw, ch, 'A', atual.a, '#4ea8ff', s);
+  cartao(ctx, W / 2 + 20 * s, cy, cw, ch, 'B', atual.b, '#e84393', s);
+  if (resposta === 'nenhuma') texto(ctx, 'Acabou o tempo!', W / 2, cy + ch + 60 * s, 32 * s, '#ff5470');
+  else if (resposta) texto(ctx, resposta === atual.certa ? 'Acertou!' : 'Errou!', W / 2, cy + ch + 60 * s, 40 * s, resposta === atual.certa ? '#3ddc84' : '#ff5470');
+}
+requestAnimationFrame(quadro);
+</script>
+</body>
+</html>
