@@ -11,7 +11,7 @@ def txt(s): return b('text', campo('TEXT', s))
 def var(v): return f'<block type="data_variable"><field name="VARIABLE" variabletype="">{v}</field></block>'
 def cmp(op, a, c): return b('math_compare', campo('OP', op), valor('A', a) + valor('B', c))
 def e(a, c): return b('logic_operation', campo('OP', 'AND'), valor('A', a) + valor('B', c))
-def menos(a, c): return b('math_arithmetic', campo('OP', 'MINUS'), valor('A', a) + valor('B', c))
+def menos(a, c): return b('math_arithmetic', campo('OP', 'SUBTRACT'), valor('A', a) + valor('B', c))
 def ler(p): return b('input_read_digital', campo('PIN', p))
 def ler_a(p): return b('input_read_analog', campo('PIN', p))
 def dist(): return b('input_read_ultrasonic_distance', campo('PIN', 10) + campo('ECHO', 11) + campo('UNITS', 'CM'))
