@@ -33,7 +33,7 @@ button.forte { background: var(--verde); color: #08130d; border-color: var(--ver
 .passos { margin: 0; padding-left: 22px; line-height: 1.7; font-size: 17px; }
 .codigo { position: relative; }
 .codigo pre { background: #0a0f1a; border: 1px solid var(--borda); border-radius: 12px; padding: 16px; overflow: auto; max-height: 520px; font-size: 14px; line-height: 1.5; margin: 0; }
-.codigo button { position: absolute; top: 10px; right: 10px; }
+.obs { background: #1d2740; border-left: 4px solid var(--amarelo); border-radius: 8px; padding: 10px 14px; margin: 0 0 12px; line-height: 1.5; }
 .desc { font-size: 18px; line-height: 1.6; color: var(--texto); margin: 0 0 10px; }
 
 /* Aba Jogar */

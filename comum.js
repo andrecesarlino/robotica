@@ -91,7 +91,7 @@ function montarPagina(j) {
       <ol class="passos">
         <li>Prepare a protoboard como na etapa 0: 5V no + de baixo, GND no − de baixo e os trilhos de baixo ligados aos de cima.</li>
         <li>Monte as peças seguindo o desenho e a tabela.</li>
-        <li>Copie o código abaixo, cole na Arduino IDE e envie para a placa.</li>
+        <li>Digite o código abaixo na Arduino IDE e envie para a placa.</li>
         <li><b>Feche o Monitor Serial</b> da IDE (senão a página não consegue usar a porta).</li>
         <li>Vá na aba <b>2. Jogar</b>, clique em <b>Conectar Arduino</b> e escolha a porta.</li>
         ${(j.passosExtras || []).map(p => `<li>${p}</li>`).join('')}
@@ -99,7 +99,7 @@ function montarPagina(j) {
       ${j.tinkercad ? `<p>Circuito pronto no Tinkercad: <a href="${j.tinkercad}" target="_blank">abrir</a>. Lá dá para simular e testar pelo Monitor Serial; a tela do jogo só conecta no Arduino de verdade.</p>` : ''}
     </section>
     <section class="caixa largo codigo"><h2>Código do Arduino</h2>
-      <button id="copiar">Copiar código</button>
+      <p class="obs">Digite o código na Arduino IDE olhando aqui. Os números do topo (os <code>const int</code>) são os pinos e os ajustes: dá para mudar e ver o que acontece.</p>
       <pre id="codigo">carregando...</pre>
     </section>
   </main>
@@ -125,11 +125,6 @@ function montarPagina(j) {
 
   document.getElementById('conectar').onclick = conectar;
   fetch(`codigo/${j.id}/${j.id}.ino`).then(r => r.text()).then(t => document.getElementById('codigo').textContent = t);
-  document.getElementById('copiar').onclick = async () => {
-    await navigator.clipboard.writeText(document.getElementById('codigo').textContent);
-    document.getElementById('copiar').textContent = 'Copiado!';
-    setTimeout(() => document.getElementById('copiar').textContent = 'Copiar código', 1500);
-  };
 
   // Teclado faz papel dos botões, para testar sem Arduino
   addEventListener('keydown', e => {
