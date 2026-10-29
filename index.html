@@ -30,6 +30,8 @@
   <p>Cada jogo tem o manual de montagem (peças, pinos e código) e a tela para jogar. Use o Google Chrome ou o Microsoft Edge.</p>
 </header>
 <main class="grade" id="jogos"></main>
+<h2 class="titulo-sec">Aula 5</h2>
+<section class="grade" id="aula5"></section>
 <h2 class="titulo-sec">Projetos da aula 4</h2>
 <section class="grade" id="projetos"></section>
 <footer>Diego Jacomini e André Cesar Lino</footer>
@@ -52,6 +54,7 @@ const cartao = ([href, icone, nome, desc, pecas, cor]) => `
     <ul class="pecas">${pecas.map(p => `<li>${p}</li>`).join('')}</ul>
   </a>`;
 document.getElementById('jogos').innerHTML = JOGOS.map(cartao).join('');
+document.getElementById('aula5').innerHTML = cartao(['display', '8️⃣', 'Display 0 a 9', 'Sete LEDs em forma de 8 que mostram os números de 0 a 9.', ['Display de 7 segmentos', 'Resistor 300 Ω'], '#ff5470']);
 document.getElementById('projetos').innerHTML = PROJETOS.map(cartao).join('');
 </script>
 </body>

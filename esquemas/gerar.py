@@ -163,7 +163,47 @@ def pescaria():
     return e
 
 
-JOGOS = {"nave": nave, "quiz": quiz, "ritmo": ritmo, "cabo": cabo, "bomba": bomba, "pescaria": pescaria}
+def display():
+    """Display de 1 dígito no vão do meio. Pinos de cima (linha e): g f COM a b; de baixo (linha f): e d COM c DP.
+    Um resistor de 300Ω só, no comum, até o trilho - de cima."""
+    e = base("Display 0 a 9: display de 7 segmentos com 1 resistor no comum")
+    c = 10
+    x0, x1 = col(c) - 9, col(c + 4) + 9
+    e.add(f'<rect x="{x0}" y="{ROW["d"] - 4}" width="{x1 - x0}" height="{ROW["g"] - ROW["d"] + 8}" rx="4" fill="#222" stroke="#000" stroke-width="2"/>')
+    # segmentos desenhados em cima do corpo
+    mx, my, a = (x0 + x1) / 2, (ROW["e"] + ROW["f"]) / 2, 13
+    for x1s, y1s, x2s, y2s in ((-a, -2 * a, a, -2 * a), (a, -2 * a, a, 0), (a, 0, a, 2 * a), (-a, 2 * a, a, 2 * a),
+                               (-a, 0, -a, 2 * a), (-a, -2 * a, -a, 0), (-a, 0, a, 0)):
+        e.add(f'<line x1="{mx + x1s}" y1="{my + y1s * 0.8}" x2="{mx + x2s}" y2="{my + y2s * 0.8}" stroke="#ff3b3b" stroke-width="4" stroke-linecap="round"/>')
+    e.text(x0 - 8, ROW["e"] + 5, "Display", 14, anchor="end")
+    for i, n in enumerate(["g", "f", "C", "a", "b"]):
+        e.text(col(c + i), ROW["d"] - 10, n, 13, "#14262a")
+    for i, n in enumerate(["e", "d", "C", "c", "."]):
+        e.text(col(c + i), ROW["g"] + 22, n, 13, "#14262a")
+    # resistor em pé do comum (coluna c+2, linha a) até o trilho - de cima
+    x, top_n = col(c + 2), 153
+    e.perna(x, ROW["a"], x, top_n)
+    e.add(f'<rect x="{x - 7}" y="{top_n + 6}" width="14" height="26" rx="6" fill="#e3c99a" stroke="#8a6d3b" stroke-width="1.5"/>')
+    for i, cr in enumerate(["#f28c28", "#111", "#7a4a1e"]):
+        e.add(f'<rect x="{x - 7}" y="{top_n + 10 + i * 6}" width="14" height="3" fill="{cr}"/>')
+    # segmentos de cima saem pela linha b, os de baixo pela linha j
+    cores = {"a": VERM, "b": LARANJA, "c": AMARELO, "d": VERDE, "e": AZUL, "f": ROXO, "g": ROSA}
+    pinos = {"a": "2", "b": "~3", "c": "4", "d": "~5", "e": "~6", "f": "7", "g": "8"}
+    topo = {"g": c, "f": c + 1, "a": c + 3, "b": c + 4}
+    baixo = {"e": c, "d": c + 1, "c": c + 3}
+    for k, (seg, cc) in enumerate(topo.items()):
+        y = 60 + 10 * k
+        e.fio(hole(cc, "b"), pin(pinos[seg]), cores[seg], via=[(col(cc), y), (490 - 9 * k, y), (490 - 9 * k, 462 + 6 * k), (pin(pinos[seg])[0], 462 + 6 * k)])
+    for k, (seg, cc) in enumerate(baixo.items()):
+        y = 440 + 6 * k
+        e.fio(hole(cc, "j"), pin(pinos[seg]), cores[seg], via=[(col(cc), y), (pin(pinos[seg])[0], y)])
+    e.legenda = e.legenda[:2] + [(VERM, "Segmentos a, b, c, d", "pinos 2, 3, 4, 5"),
+                                 (AZUL, "Segmentos e, f, g", "pinos 6, 7, 8"),
+                                 (PRETO, "Comum (C, pino do meio)", "resistor 300Ω ao trilho - de cima")]
+    return e
+
+
+JOGOS = {"display": display, "nave": nave, "quiz": quiz, "ritmo": ritmo, "cabo": cabo, "bomba": bomba, "pescaria": pescaria}
 
 if __name__ == "__main__":
     pasta = pathlib.Path(__file__).parent

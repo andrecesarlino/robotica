@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="comum.css">
+<title>Robótica</title>
+</head>
+<body>
+<script src="comum.js"></script>
+<script>
+montarPagina({
+  id: 'display',
+  titulo: 'Display 0 a 9',
+  descricao: 'O display de 7 segmentos é formado por 7 LEDs compridos (os segmentos a até g). Acendendo alguns e apagando outros, aparece um número. O programa conta de 0 a 9, um número por segundo, e a tela mostra o mesmo número que está no display.',
+  pecas: ['Display de 7 segmentos', '1 resistor 300 Ω'],
+  ligacoes: [
+    ['Segmento a', '2', 'pino de cima, 4º da esquerda'],
+    ['Segmento b', '3', 'pino de cima, 5º'],
+    ['Segmento c', '4', 'pino de baixo, 4º'],
+    ['Segmento d', '5', 'pino de baixo, 2º'],
+    ['Segmento e', '6', 'pino de baixo, 1º'],
+    ['Segmento f', '7', 'pino de cima, 2º'],
+    ['Segmento g', '8', 'pino de cima, 1º'],
+    ['Comum (pino do meio)', 'GND', 'com o resistor 300 Ω no meio do caminho'],
+  ],
+  passosExtras: ['Se nada acender, o display pode ser de ânodo comum: ligue o resistor do comum no + e troque CATODO_COMUM para false no código.'],
+  teclado: 'Sem Arduino: teclas 0 a 9',
+  teclas: Object.fromEntries([...'0123456789'].map(n => [n, n])),
+});
+
+const NUMEROS = ['abcdef', 'bc', 'abdeg', 'abcdg', 'bcfg', 'acdfg', 'acdefg', 'abc', 'abcdefg', 'abcdfg'];
+let numero = 0;
+Arduino.aoReceber = linha => { const n = Number(linha); if (Number.isInteger(n) && n >= 0 && n <= 9) numero = n; };
+
+function quadro() {
+  requestAnimationFrame(quadro);
+  const { ctx, W, H, s } = prepararTela();
+  ctx.fillStyle = '#0d1321'; ctx.fillRect(0, 0, W, H);
+  const h = Math.min(H * 0.8, W * 0.9), w = h * 0.55, x = W / 2 - w / 2, y = H / 2 - h / 2;
+  ctx.fillStyle = '#111'; ctx.beginPath(); ctx.roundRect(x - h * 0.08, y - h * 0.05, w + h * 0.16, h * 1.1, 20 * s); ctx.fill();
+  const g = h * 0.09, m = g * 0.6;  // espessura e margem dos segmentos
+  const seg = {
+    a: [x + m, y, w - 2 * m, g], d: [x + m, y + h - g, w - 2 * m, g], g: [x + m, y + h / 2 - g / 2, w - 2 * m, g],
+    f: [x, y + m, g, h / 2 - 2 * m + g / 2], b: [x + w - g, y + m, g, h / 2 - 2 * m + g / 2],
+    e: [x, y + h / 2 + m - g / 2, g, h / 2 - 2 * m + g / 2], c: [x + w - g, y + h / 2 + m - g / 2, g, h / 2 - 2 * m + g / 2],
+  };
+  for (const [nome, [sx, sy, sw, sh]] of Object.entries(seg)) {
+    const aceso = NUMEROS[numero].includes(nome);
+    ctx.fillStyle = aceso ? '#ff3b3b' : '#2a1416';
+    ctx.shadowColor = '#ff3b3b'; ctx.shadowBlur = aceso ? 30 * s : 0;
+    ctx.beginPath(); ctx.roundRect(sx, sy, sw, sh, g / 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    texto(ctx, nome, sx + sw / 2, sy + sh / 2, g * 0.6, aceso ? '#fff' : '#5a2a2e');
+  }
+}
+requestAnimationFrame(quadro);
+</script>
+</body>
+</html>
