@@ -5,7 +5,7 @@ Uso: python3 esquemas/gerar.py  -> cria um .svg por jogo nesta pasta
 import pathlib
 import sys
 
-sys.path.insert(0, "/mnt/dados/projetos/radar-arduino/esquema")
+sys.path.insert(0, "/mnt/dados/projetos/abandonado/radar-arduino/esquema")
 from gerar_esquemas import (aula3, col, hole, pin, rail_n, rail_p, ROW, VERM, PRETO, LARANJA,
                             AMARELO, VERDE, ROXO, AZUL, MARROM, CINZA)
 
