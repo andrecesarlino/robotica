@@ -83,7 +83,7 @@ JOGOS = {
         servo(9, mapear(ler_a('A0'), 150, 60)),
         definir('distancia', dist()),
         se(e(cmp('GT', var('distancia'), num(0)), cmp('LT', var('distancia'), menos(var('fundo'), num(3)))),
-           imprimir(txt('PONTO')), esperar(800)),
+           imprimir(txt('PONTO')), esperar(800), definir('fundo', dist())),
         ouvir((11, [definir('fundo', dist())]), (7, [som(90, 0.12)]), (6, [som(72, 0.06)]),
               (9, [som(76, 0.2), esperar(220), som(72, 0.2), esperar(220), som(69, 0.5)])),
         esperar(15)]),
