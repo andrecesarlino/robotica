@@ -1,3 +1,11 @@
+// Menu do topo, igual em todas as páginas
+const MENU = [['./', 'Jogos'], ['aula.html#1', 'Aula 1'], ['aula.html#2', 'Aula 2'], ['aula.html#3', 'Aula 3'],
+  ['aula.html#4', 'Aula 4'], ['aula.html#5', 'Aula 5']];
+function menuHtml(ativo) {
+  return `<nav class="menu"><a class="marca" href="./">Robótica</a>${MENU.map(([h, t]) =>
+    `<a href="${h}"${t === ativo ? ' class="ativo"' : ''}>${t}</a>`).join('')}</nav>`;
+}
+
 // Peças comuns a todos os jogos: abas Montar/Jogar, manual de montagem e conexão com o Arduino.
 // Cada jogo chama montarPagina({...}) e define Arduino.aoReceber = linha => {...}.
 
@@ -65,8 +73,8 @@ function montarPagina(j) {
   const linhas = j.ligacoes.map(([peca, pino, obs]) =>
     `<tr><td>${peca}</td><td><span class="pino">${pino}</span></td><td>${obs || ''}</td></tr>`).join('');
   document.body.insertAdjacentHTML('afterbegin', `
+  ${menuHtml('Jogos')}
   <header class="topo">
-    <a class="voltar" href="./">← Jogos</a>
     <h1>${j.titulo}</h1>
     <nav class="abas"><button data-aba="montar">1. Montar</button><button data-aba="jogar">2. Jogar</button></nav>
   </header>

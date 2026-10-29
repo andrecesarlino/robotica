@@ -37,7 +37,7 @@ button.forte { background: var(--verde); color: #08130d; border-color: var(--ver
 .desc { font-size: 18px; line-height: 1.6; color: var(--texto); margin: 0 0 10px; }
 
 /* Aba Jogar */
-.jogar { display: none; flex-direction: column; height: calc(100vh - 66px); }
+.jogar { display: none; flex-direction: column; height: calc(100vh - 120px); }
 .barra { display: flex; gap: 12px; align-items: center; padding: 10px 20px; flex-wrap: wrap; border-bottom: 1px solid var(--borda); }
 .barra .status { color: var(--suave); }
 .barra .dica { color: var(--suave); font-size: 14px; margin-left: auto; }
@@ -45,3 +45,10 @@ button.forte { background: var(--verde); color: #08130d; border-color: var(--ver
 .jogar canvas { flex: 1; width: 100%; min-height: 0; display: block; }
 
 @media (max-width: 900px) { .montar { grid-template-columns: 1fr; } }
+
+/* Menu do topo */
+.menu { display: flex; gap: 4px; align-items: center; padding: 10px 20px; border-bottom: 1px solid var(--borda); background: #0a0f1a; flex-wrap: wrap; }
+.menu a { color: var(--suave); text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; }
+.menu a:hover { color: var(--texto); background: var(--painel); }
+.menu a.ativo { color: #061224; background: var(--azul); }
+.menu .marca { color: var(--verde); font-family: 'Space Grotesk', Arial, sans-serif; font-size: 20px; margin-right: 12px; }
