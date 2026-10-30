@@ -36,8 +36,10 @@ let codigo = [], certos = 0, numero = 0, restante = TEMPO, proximoTique = 0;
 let dica = '', dicaT = 0, tentativas = 0, flash = 0, fimEm = 0, girar = 0;
 
 Arduino.aoReceber = linha => {
-  if (linha[0] === 'P') numero = Math.min(9, Math.floor(Number(linha.slice(1)) / 1024 * 10));
-  if (linha === 'B1') tentar();
+  if (linha === 'B1') return tentar();
+  // aceita P512, p512, P 512 ou 512 sozinho (se o bloco do P ficou com nova linha, o número chega na linha de baixo)
+  const valor = linha.match(/^P?\s*:?\s*(\d+)/i);
+  if (valor) numero = Math.min(9, Math.floor(Number(valor[1]) / 1024 * 10));
 };
 document.addEventListener('mousemove', e => {
   if (Arduino.escritor) return;

@@ -57,7 +57,7 @@ async function conectar() {
           sobra = linhas.pop();
           for (const linha of linhas) {
             if (!linha.trim()) continue;
-            Arduino.aoReceber(linha.trim());
+            Arduino.aoReceber(linha.trim().toUpperCase());  // p512 vale o mesmo que P512
             status.textContent = 'Arduino conectado, recebendo: ' + linha.trim();  // mostra que os dados estão chegando
           }
         }
