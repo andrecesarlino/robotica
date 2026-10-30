@@ -55,7 +55,11 @@ async function conectar() {
           if (done) { fim = true; break; }
           const linhas = (sobra + decodificador.decode(value, { stream: true })).split('\n');
           sobra = linhas.pop();
-          for (const linha of linhas) if (linha.trim()) Arduino.aoReceber(linha.trim());
+          for (const linha of linhas) {
+            if (!linha.trim()) continue;
+            Arduino.aoReceber(linha.trim());
+            status.textContent = 'Arduino conectado, recebendo: ' + linha.trim();  // mostra que os dados estão chegando
+          }
         }
       } catch (e) {
         sobra = '';

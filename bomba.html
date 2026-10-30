@@ -139,6 +139,7 @@ function quadro(agora) {
     texto(ctx, `Descubra o código de ${DIGITOS} números em ${TEMPO} segundos`, W / 2, H / 2 - 10 * s, 28 * s, '#fff', 'center', 500);
     texto(ctx, 'Gire o potenciômetro e aperte o botão. A tela avisa se é maior ou menor.', W / 2, H / 2 + 30 * s, 22 * s, '#93a1bd', 'center', 500);
     texto(ctx, 'Aperte o botão para começar', W / 2, H / 2 + 90 * s, 26 * s, '#ffd166', 'center', 500);
+    texto(ctx, `Número no potenciômetro: ${numero}`, W / 2, H / 2 + 140 * s, 26 * s, '#fff', 'center', 500);
   }
   if (estado === 'desarmou') {
     ctx.fillStyle = 'rgba(10,40,25,.85)'; ctx.fillRect(0, 0, W, H);

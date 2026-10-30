@@ -41,7 +41,8 @@ void loop()
 
 //## Ouvir a tela | Lê as letras que a tela manda e passa para a função comando.
   while (Serial.available() > 0) {
-    comando(Serial.read());
+    int n = Serial.read();  // a tela manda números, iguais aos dos blocos: 1 = r, 2 = g, 3 = b, 4 = y...
+    if (n > 0 && n < 12) comando(" rgbyotaefxc"[n]);
   }
   delay(20);
 }

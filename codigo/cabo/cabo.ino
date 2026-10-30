@@ -43,7 +43,8 @@ void loop()
   antes2 = b2;
 
   while (Serial.available() > 0) {
-    comando(Serial.read());
+    int n = Serial.read();  // a tela manda números, iguais aos dos blocos: 1 = r, 2 = g, 3 = b, 4 = y...
+    if (n > 0 && n < 12) comando(" rgbyotaefxc"[n]);
   }
   delay(15);  // espera o botão parar de tremer, senão um aperto conta duas vezes
 }
