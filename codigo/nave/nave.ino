@@ -3,8 +3,8 @@
 // O Arduino manda a distância e o botão para a tela; a tela manda de volta
 // uma letra para acender o LED ou tocar o buzzer.
 
-const int BOTAO = 2;         // atira
-const int BOTAO_COMECAR = 3; // começa a partida
+const int BOTAO_COMECAR = 2; // começa a partida
+const int BOTAO_TIRO = 3;    // atira
 const int TRIG = 10;
 const int ECHO = 11;
 const int BUZZER = 8;
@@ -14,13 +14,13 @@ const int LED_AZUL = 5;
 
 //## Memória do botão | Guarda se o botão já estava apertado, para contar um aperto só uma vez.
 bool apertadoAntes = false;
-bool comecarAntes = false;
+bool tiroAntes = false;
 
 //## setup | Roda uma vez: diz quais pinos são entrada e quais são saída e liga o Monitor Serial.
 void setup()
 {
-  pinMode(BOTAO, INPUT_PULLUP);
   pinMode(BOTAO_COMECAR, INPUT_PULLUP);
+  pinMode(BOTAO_TIRO, INPUT_PULLUP);
   pinMode(TRIG, OUTPUT);
   pinMode(ECHO, INPUT);
   pinMode(BUZZER, OUTPUT);
@@ -44,20 +44,20 @@ void loop()
   Serial.print("D");
   Serial.println(distancia);
 
-//## Botões | No momento em que aperta, manda B1 (atirar) ou B2 (começar) para a tela.
-  // botão: manda B1 só no momento em que aperta
-  bool apertado = digitalRead(BOTAO) == LOW;
+//## Botões | No momento em que aperta, manda B1 (começar) ou B2 (atirar) para a tela.
+  // botão de começar: manda B1 só no momento em que aperta
+  bool apertado = digitalRead(BOTAO_COMECAR) == LOW;
   if (apertado && !apertadoAntes) {
     Serial.println("B1");
   }
   apertadoAntes = apertado;
 
-  // botão de começar: manda B2 só no momento em que aperta
-  bool comecar = digitalRead(BOTAO_COMECAR) == LOW;
-  if (comecar && !comecarAntes) {
+  // botão de tiro: manda B2 só no momento em que aperta
+  bool tiro = digitalRead(BOTAO_TIRO) == LOW;
+  if (tiro && !tiroAntes) {
     Serial.println("B2");
   }
-  comecarAntes = comecar;
+  tiroAntes = tiro;
 
 //## Ouvir a tela | Lê as letras que a tela manda e passa para a função comando.
   // letras que a tela mandou

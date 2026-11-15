@@ -16,13 +16,13 @@ montarPagina({
   tinkercad: 'https://www.tinkercad.com/things/hnOAiQ3i9ow',
   imagem: 'esquemas/nave.svg',  // o print do Tinkercad ainda não tem o botão de começar
   titulo: 'Nave controlada pela mão',
-  descricao: 'Passe a mão sobre o sensor ultrassônico: mão perto, a nave desce; mão longe, a nave sobe. Aperte o botão de começar (pino 3) para iniciar a partida e o botão de tiro (pino 2) para atirar. Desvie dos asteroides. Os tiros acabam: pegue as balas verdes no caminho (+10). Depois de 20 segundos aparecem naves inimigas que atiram e precisam de 2 tiros. A música toca no buzzer; bateu, toca o som da batida e o LED pisca branco. São 3 vidas e a cor do LED mostra quantas restam: verde, amarelo, vermelho.',
+  descricao: 'Passe a mão sobre o sensor ultrassônico: mão perto, a nave desce; mão longe, a nave sobe. Aperte o botão de começar (pino 2) para iniciar a partida e o botão de tiro (pino 3) para atirar. Desvie dos asteroides. Os tiros acabam: pegue as balas verdes no caminho (+10). Depois de 20 segundos aparecem naves inimigas que atiram e precisam de 2 tiros. A música toca no buzzer; bateu, toca o som da batida e o LED pisca branco. São 3 vidas e a cor do LED mostra quantas restam: verde, amarelo, vermelho.',
   pecas: ['Sensor ultrassônico', '2 botões', 'Buzzer', 'LED RGB', '3 resistores 300 Ω'],
   ligacoes: [
     ['Ultrassônico Trig', '10', 'VCC no 5V, GND no GND'],
     ['Ultrassônico Echo', '11', ''],
-    ['Botão (atirar)', '2', 'o lado oposto do botão vai no GND'],
-    ['Botão (começar)', '3', 'o lado oposto do botão vai no GND'],
+    ['Botão (começar)', '2', 'o lado oposto do botão vai no GND'],
+    ['Botão (atirar)', '3', 'o lado oposto do botão vai no GND'],
     ['Buzzer +', '8', 'a outra perna vai no GND'],
     ['LED RGB vermelho (R)', '7', 'com resistor de 300 Ω'],
     ['LED RGB verde (G)', '6', 'com resistor de 300 Ω'],
@@ -30,7 +30,7 @@ montarPagina({
   ],
   passosExtras: ['Deixe o sensor deitado na mesa, olhando para cima. A mão funciona entre 5 e 25 cm de altura.'],
   teclado: 'Sem Arduino: mouse sobe e desce a nave, espaço atira, Enter começa',
-  teclas: { ' ': 'B1', enter: 'B2' },
+  teclas: { ' ': 'B2', enter: 'B1' },
 });
 
 const PERTO = 5, LONGE = 25;      // cm: faixa da mão (fundo e topo da tela)
@@ -58,8 +58,8 @@ Arduino.aoReceber = linha => {
       alvoY = 1 - Math.min(1, Math.max(0, (maoCm - PERTO) / (LONGE - PERTO)));
     }
   }
-  if (linha === 'B1') atirar();
-  if (linha === 'B2' && estado !== 'jogando' && performance.now() - fimEm > 1500) comecar();  // botão de começar
+  if (linha === 'B2') atirar();  // botão de tiro, pino 3
+  if (linha === 'B1' && estado !== 'jogando' && performance.now() - fimEm > 1500) comecar();  // botão de começar, pino 2
 };
 document.addEventListener('mousemove', e => {
   if (Arduino.escritor) return;
