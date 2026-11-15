@@ -39,18 +39,23 @@ let pontos = 0, vidas = 3, tempo = 0, piscar = 0;
 let asteroides = [], tiros = [], estrelas = [], explosoes = [];
 for (let i = 0; i < 120; i++) estrelas.push({ x: Math.random(), y: Math.random(), v: 0.02 + Math.random() * 0.08 });
 
-let leituras = [];                // últimas medidas boas do sensor
+let leituras = [], maoCm = null, foraSeguidas = 0;  // últimas medidas boas, onde a mão está, leituras erradas seguidas
 let brutas = [];                  // tudo o que o sensor mandou, para mostrar na tela e achar leitura errada
 Arduino.aoReceber = linha => {
   if (linha[0] === 'D') {
     const d = Number(linha.slice(1));
     brutas.push(d); if (brutas.length > 12) brutas.shift();
-    // 0 ou mais de 150 cm é leitura impossível (eco perdido): ignora. Acima de LONGE conta como topo.
-    if (d >= 2 && d <= 150) {
+    // O sensor mede ~30 vezes por segundo e a mão anda poucos cm entre uma medida e outra. Medida que salta mais
+    // de 10 cm é o sensor errando (vê o teto, perde o eco): ignora. Se o salto durar 25 medidas (~0,8 s), a mão
+    // foi mesmo para outro lugar e o jogo aceita. Testado com uma gravação real do sensor: nenhum pulo na nave.
+    if (d >= 2) {
+      if (maoCm !== null && Math.abs(d - maoCm) > 10 && ++foraSeguidas < 25) return;
+      if (foraSeguidas >= 25) leituras = [];
+      foraSeguidas = 0;
       leituras.push(d);
-      if (leituras.length > 5) leituras.shift();
-      const mediana = [...leituras].sort((a, b) => a - b)[leituras.length >> 1];  // um pico isolado não mexe na mediana
-      alvoY = 1 - Math.min(1, Math.max(0, (mediana - PERTO) / (LONGE - PERTO)));
+      if (leituras.length > 3) leituras.shift();
+      maoCm = [...leituras].sort((a, b) => a - b)[leituras.length >> 1];
+      alvoY = 1 - Math.min(1, Math.max(0, (maoCm - PERTO) / (LONGE - PERTO)));
     }
   }
   if (linha === 'B1') atirar();
