@@ -20,10 +20,14 @@ const Arduino = {
     const n = NUMERO_DO_COMANDO[letra];
     if (Arduino.escritor && n) Arduino.escritor.write(new Uint8Array([n])).catch(() => {});
   },
+  // Manda uma nota musical (número de 20 a 127, o mesmo do bloco "reproduzir alto-falante") para o buzzer.
+  nota(n) {
+    if (Arduino.escritor) Arduino.escritor.write(new Uint8Array([n])).catch(() => {});
+  },
 };
 
-const NUMERO_DO_COMANDO = { r: 1, g: 2, b: 3, y: 4, o: 5, t: 6, a: 7, e: 8, f: 9, x: 10, c: 11 };
-const CORES_LED = { r: '#ff3355', g: '#33ff77', b: '#3399ff', y: '#ffd23f' };
+const NUMERO_DO_COMANDO = { r: 1, g: 2, b: 3, y: 4, o: 5, t: 6, a: 7, e: 8, f: 9, x: 10, c: 11, w: 12, p: 13 };
+const CORES_LED = { r: '#ff3355', g: '#33ff77', b: '#3399ff', y: '#ffd23f', w: '#ffffff', p: '#b04dff' };
 function ledDaTela(letra) {
   const led = document.getElementById('led');
   if (!led) return;

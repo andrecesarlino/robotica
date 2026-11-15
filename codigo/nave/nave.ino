@@ -53,7 +53,9 @@ void loop()
   // letras que a tela mandou
   while (Serial.available() > 0) {
     int n = Serial.read();  // a tela manda números, iguais aos dos blocos: 1 = r, 2 = g, 3 = b, 4 = y...
-    if (n > 0 && n < 12) comando(" rgbyotaefxc"[n]);
+    if (n > 0 && n < 14) comando(" rgbyotaefxcwp"[n]);
+    if (n >= 20) tone(BUZZER, 440 * pow(2.0, (n - 69) / 12.0), 150);  // 20 ou mais é uma nota da música
+
   }
   delay(30);
 }
@@ -66,15 +68,16 @@ void cor(int vermelho, int verde, int azul)
   digitalWrite(LED_AZUL, azul);
 }
 
-//## O que cada letra faz | r, g, b, y mudam a cor do LED; t, a, e tocam os sons do jogo.
+//## O que cada letra faz | r, g, b, y, w, p mudam a cor do LED; t e a tocam os sons do jogo.
 void comando(char letra)
 {
-  if (letra == 'r') cor(HIGH, LOW, LOW);       // vermelho
-  if (letra == 'g') cor(LOW, HIGH, LOW);       // verde
-  if (letra == 'b') cor(LOW, LOW, HIGH);       // azul
-  if (letra == 'y') cor(HIGH, HIGH, LOW);      // amarelo
+  if (letra == 'r') cor(HIGH, LOW, LOW);       // vermelho: 1 vida
+  if (letra == 'g') cor(LOW, HIGH, LOW);       // verde: 3 vidas
+  if (letra == 'b') cor(LOW, LOW, HIGH);       // azul: tiro
+  if (letra == 'y') cor(HIGH, HIGH, LOW);      // amarelo: 2 vidas
+  if (letra == 'w') cor(HIGH, HIGH, HIGH);     // branco: bateu
+  if (letra == 'p') cor(HIGH, LOW, HIGH);      // roxo: fim de jogo
   if (letra == 'o') cor(LOW, LOW, LOW);        // apaga
   if (letra == 't') tone(BUZZER, 1800, 20);    // tiro
   if (letra == 'a') tone(BUZZER, 1200, 80);    // acertou
-  if (letra == 'e') tone(BUZZER, 150, 400);    // bateu
 }

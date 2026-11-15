@@ -54,8 +54,15 @@ JOGOS = {
     'nave': programa(['cmd'], [], [
         imprimir(txt('D'), False), imprimir(dist()),
         botao(2, 'B1'),
-        ouvir((1, cor(1, 0, 0)), (2, cor(0, 1, 0)), (5, cor(0, 0, 0)),
-              (6, [som(95, 0.02)]), (7, [som(84, 0.08)]), (8, [som(50, 0.4)])),
+        # "enquanto" lê tudo o que chegou: a cor e a nota da música podem vir juntas
+        enquanto(cmp('GT', b('input_serial_available'), num(0)),
+                 definir('cmd', b('input_serial_read')),
+                 *[se(cmp('EQ', var('cmd'), num(n)), *corpo) for n, corpo in (
+                     (1, cor(1, 0, 0)), (2, cor(0, 1, 0)), (3, cor(0, 0, 1)), (4, cor(1, 1, 0)),
+                     (12, cor(1, 1, 1)), (13, cor(1, 0, 1)), (5, cor(0, 0, 0)),
+                     (6, [som(95, 0.02)]), (7, [som(84, 0.08)]))],
+                 se(cmp('GT', var('cmd'), num(19)),  # 20 ou mais é uma nota da música
+                    b('output_play_tone', campo('PIN', 8), valor('NOTE', var('cmd')) + valor('DURATION', num(0.15))))),
         esperar(30)]),
     'quiz': programa(['cmd'], [], [
         botao(2, 'B1'), botao(3, 'B2'),

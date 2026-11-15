@@ -39,10 +39,17 @@ let pontos = 0, vidas = 3, tempo = 0, piscar = 0;
 let asteroides = [], tiros = [], estrelas = [], explosoes = [];
 for (let i = 0; i < 120; i++) estrelas.push({ x: Math.random(), y: Math.random(), v: 0.02 + Math.random() * 0.08 });
 
+let leituras = [];                // últimas medidas boas do sensor
 Arduino.aoReceber = linha => {
   if (linha[0] === 'D') {
     const d = Number(linha.slice(1));
-    if (d >= 2 && d <= 80) alvoY = 1 - Math.min(1, Math.max(0, (d - PERTO) / (LONGE - PERTO)));
+    // fora da faixa da mão é leitura ruim (mão inclinada, eco perdido): ignora e a nave fica onde está
+    if (d >= 2 && d <= LONGE + 15) {
+      leituras.push(d);
+      if (leituras.length > 5) leituras.shift();
+      const mediana = [...leituras].sort((a, b) => a - b)[leituras.length >> 1];  // um pico isolado não mexe na mediana
+      alvoY = 1 - Math.min(1, Math.max(0, (mediana - PERTO) / (LONGE - PERTO)));
+    }
   }
   if (linha === 'B1') atirar();
 };
@@ -52,20 +59,43 @@ document.addEventListener('mousemove', e => {
   if (e.clientY > r.top) alvoY = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
 });
 
-musica([440, 0, 523, 0, 659, 587, 523, 0, 392, 0, 440, 523, 494, 0, 0, 0,
-        440, 0, 523, 0, 659, 784, 659, 0, 587, 0, 523, 494, 440, 0, 0, 0],
-       () => estado === 'jogando');
+// Música em números de nota (69 = lá). Com o Arduino conectado toca no buzzer; sem ele, no computador.
+const MUSICA = [69, 0, 72, 0, 76, 74, 72, 0, 67, 0, 69, 72, 71, 0, 0, 0,
+                69, 0, 72, 0, 76, 79, 76, 0, 74, 0, 72, 71, 69, 0, 0, 0];
+const BATIDA = [52, 47, 43, 0];                              // depois da pausa a música continua de onde parou
+const MORTE = [67, 0, 66, 0, 65, 0, 64, 64, 0, 60, 60, 60];  // descendo, e o jogo fica em silêncio
+let efeito = [], passoMusica = 0;
+function tocar(nota) {
+  if (Arduino.escritor) Arduino.nota(nota);
+  else som(440 * 2 ** ((nota - 69) / 12), 140, 0.03, 'square');
+}
+setInterval(() => {
+  if (efeito.length) { const n = efeito.shift(); if (n) tocar(n); return; }
+  if (estado !== 'jogando') { passoMusica = 0; return; }
+  const n = MUSICA[passoMusica++ % MUSICA.length];
+  if (n) tocar(n);
+}, 160);
+
+// LED RGB: a cor mostra as vidas (verde, amarelo, vermelho) e pisca azul no tiro e branco na batida.
+let voltarCor;
+function corDasVidas() { Arduino.enviar(vidas >= 3 ? 'g' : vidas === 2 ? 'y' : 'r'); }
+function piscarCor(letra, ms) {
+  Arduino.enviar(letra);
+  clearTimeout(voltarCor);
+  voltarCor = setTimeout(() => estado === 'jogando' && corDasVidas(), ms);
+}
 
 function comecar() {
   estado = 'jogando'; pontos = 0; vidas = 3; tempo = 0;
-  asteroides = []; tiros = []; explosoes = [];
-  Arduino.enviar('g');
+  asteroides = []; tiros = []; explosoes = []; efeito = [];
+  corDasVidas();
 }
 function atirar() {
   if (estado !== 'jogando') { if (performance.now() - fimEm > 1500) comecar(); return; }
   if (tiros.length > 4) return;
   tiros.push({ x: 0.16, y: naveY });
   Arduino.enviar('t'); som(1800, 30);
+  piscarCor('b', 120);
 }
 document.getElementById('tela').addEventListener('click', () => { if (estado !== 'jogando') comecar(); });
 
@@ -74,7 +104,7 @@ function quadro(agora) {
   requestAnimationFrame(quadro);
   const dt = Math.min(0.1, (agora - antes) / 1000); antes = agora;
   const { ctx, W, H, s } = prepararTela();
-  naveY += (alvoY - naveY) * Math.min(1, dt * 8);  // suaviza o sensor
+  naveY += (alvoY - naveY) * Math.min(1, dt * 6);  // desliza até a posição da mão, sem pular
 
   ctx.fillStyle = '#050813'; ctx.fillRect(0, 0, W, H);
   for (const e of estrelas) {
@@ -104,9 +134,11 @@ function quadro(agora) {
     for (const a of asteroides) {
       if (!a.morto && Math.hypot(a.x * W - nx, a.y - ny) < a.r + 18 * s) {
         a.morto = true; vidas--; piscar = 1; explosoes.push({ x: nx, y: ny, t: 0, cor: '#ff5470' });
-        Arduino.enviar('r'); Arduino.enviar('e'); som(150, 400, 0.08);
-        setTimeout(() => estado === 'jogando' && Arduino.enviar('g'), 600);
-        if (vidas <= 0) { estado = 'fim'; fimEm = performance.now(); recorde('nave', pontos); setTimeout(() => Arduino.enviar('o'), 700); }
+        piscarCor('w', 300); efeito = [...BATIDA];
+        if (vidas <= 0) {
+          estado = 'fim'; fimEm = performance.now(); recorde('nave', pontos);
+          clearTimeout(voltarCor); Arduino.enviar('p'); efeito = [...MORTE];
+        }
       }
       if (a.x < -0.1 && !a.morto) { a.morto = true; pontos += 1; }
     }
