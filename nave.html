@@ -43,8 +43,8 @@ let leituras = [];                // últimas medidas boas do sensor
 Arduino.aoReceber = linha => {
   if (linha[0] === 'D') {
     const d = Number(linha.slice(1));
-    // fora da faixa da mão é leitura ruim (mão inclinada, eco perdido): ignora e a nave fica onde está
-    if (d >= 2 && d <= LONGE + 15) {
+    // 0 ou mais de 150 cm é leitura impossível (eco perdido): ignora. Acima de LONGE conta como topo.
+    if (d >= 2 && d <= 150) {
       leituras.push(d);
       if (leituras.length > 5) leituras.shift();
       const mediana = [...leituras].sort((a, b) => a - b)[leituras.length >> 1];  // um pico isolado não mexe na mediana
