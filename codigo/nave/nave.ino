@@ -54,7 +54,7 @@ void loop()
   while (Serial.available() > 0) {
     int n = Serial.read();  // a tela manda números, iguais aos dos blocos: 1 = r, 2 = g, 3 = b, 4 = y...
     if (n > 0 && n < 14) comando(" rgbyotaefxcwp"[n]);
-    if (n >= 20) tone(BUZZER, 440 * pow(2.0, (n - 69) / 12.0), 150);  // 20 ou mais é uma nota da música
+    if (n >= 20) tone(BUZZER, 440 * pow(2.0, (n - 57) / 12.0), 150);  // 20 ou mais é uma nota da música (57 = lá, igual ao bloco)
 
   }
   delay(30);

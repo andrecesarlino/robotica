@@ -20,7 +20,7 @@ const Arduino = {
     const n = NUMERO_DO_COMANDO[letra];
     if (Arduino.escritor && n) Arduino.escritor.write(new Uint8Array([n])).catch(() => {});
   },
-  // Manda uma nota musical (número de 20 a 127, o mesmo do bloco "reproduzir alto-falante") para o buzzer.
+  // Manda uma nota musical para o buzzer: o mesmo número do bloco "reproduzir alto-falante" (57 = lá, de 35 a 127).
   nota(n) {
     if (Arduino.escritor) Arduino.escritor.write(new Uint8Array([n])).catch(() => {});
   },

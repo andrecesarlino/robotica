@@ -59,15 +59,16 @@ document.addEventListener('mousemove', e => {
   if (e.clientY > r.top) alvoY = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
 });
 
-// Música em números de nota (69 = lá). Com o Arduino conectado toca no buzzer; sem ele, no computador.
-const MUSICA = [69, 0, 72, 0, 76, 74, 72, 0, 67, 0, 69, 72, 71, 0, 0, 0,
-                69, 0, 72, 0, 76, 79, 76, 0, 74, 0, 72, 71, 69, 0, 0, 0];
-const BATIDA = [52, 47, 43, 0];                              // depois da pausa a música continua de onde parou
-const MORTE = [67, 0, 66, 0, 65, 0, 64, 64, 0, 60, 60, 60];  // descendo, e o jogo fica em silêncio
+// Música em números de nota do bloco "reproduzir alto-falante" do Tinkercad (57 = lá, 440 Hz; o bloco aceita de 35 a 127).
+// Com o Arduino conectado toca no buzzer; sem ele, no computador.
+const MUSICA = [57, 0, 60, 0, 64, 62, 60, 0, 55, 0, 57, 60, 59, 0, 0, 0,
+                57, 0, 60, 0, 64, 67, 64, 0, 62, 0, 60, 59, 57, 0, 0, 0];
+const BATIDA = [45, 40, 36, 0];                              // depois da pausa a música continua de onde parou
+const MORTE = [55, 0, 54, 0, 53, 0, 52, 52, 0, 48, 48, 48];  // descendo, e o jogo fica em silêncio
 let efeito = [], passoMusica = 0;
 function tocar(nota) {
   if (Arduino.escritor) Arduino.nota(nota);
-  else som(440 * 2 ** ((nota - 69) / 12), 140, 0.03, 'square');
+  else som(440 * 2 ** ((nota - 57) / 12), 140, 0.03, 'square');
 }
 setInterval(() => {
   if (efeito.length) { const n = efeito.shift(); if (n) tocar(n); return; }
