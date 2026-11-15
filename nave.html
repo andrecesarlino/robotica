@@ -40,11 +40,9 @@ let asteroides = [], tiros = [], estrelas = [], explosoes = [];
 for (let i = 0; i < 120; i++) estrelas.push({ x: Math.random(), y: Math.random(), v: 0.02 + Math.random() * 0.08 });
 
 let leituras = [], maoCm = null, foraSeguidas = 0;  // últimas medidas boas, onde a mão está, leituras erradas seguidas
-let brutas = [];                  // tudo o que o sensor mandou, para mostrar na tela e achar leitura errada
 Arduino.aoReceber = linha => {
   if (linha[0] === 'D') {
     const d = Number(linha.slice(1));
-    brutas.push(d); if (brutas.length > 12) brutas.shift();
     // O sensor mede ~30 vezes por segundo e a mão anda poucos cm entre uma medida e outra. Medida que salta mais
     // de 10 cm é o sensor errando (vê o teto, perde o eco): ignora. Se o salto durar 15 medidas (~0,5 s), a mão
     // foi mesmo para outro lugar e o jogo aceita. Testado com uma gravação real do sensor: nenhum pulo na nave.
@@ -186,7 +184,7 @@ function quadro(agora) {
   texto(ctx, `${pontos}`, W / 2, 34 * s, 34 * s, '#fff');
   texto(ctx, '♥'.repeat(Math.max(0, vidas)), 24 * s, 34 * s, 30 * s, '#ff5470', 'left');
   texto(ctx, `recorde ${recorde('nave', 0)}`, W - 24 * s, 34 * s, 18 * s, '#93a1bd', 'right', 500);
-  if (brutas.length) texto(ctx, `sensor (cm): ${brutas.join(' ')}`, 24 * s, H - 16 * s, 16 * s, '#93a1bd', 'left', 500);
+  if (maoCm !== null) texto(ctx, `mão: ${maoCm} cm`, 24 * s, H - 16 * s, 18 * s, '#93a1bd', 'left', 500);
   if (estado === 'parado') {
     texto(ctx, 'NAVE', W / 2, H / 2 - 50 * s, 80 * s, '#fff');
     texto(ctx, 'Aperte o botão para começar', W / 2, H / 2 + 20 * s, 26 * s, '#ffd166', 'center', 500);
