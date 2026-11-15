@@ -26,12 +26,12 @@ montarPagina({
     ['LED RGB verde (G)', '6', 'com resistor de 300 Ω'],
     ['LED RGB azul (B)', '5', 'com resistor de 300 Ω. A perna maior do LED vai no GND'],
   ],
-  passosExtras: ['Deixe o sensor deitado na mesa, olhando para cima. A mão funciona entre 5 e 40 cm de altura.'],
+  passosExtras: ['Deixe o sensor deitado na mesa, olhando para cima. A mão funciona entre 5 e 25 cm de altura.'],
   teclado: 'Sem Arduino: mouse sobe e desce a nave, espaço atira',
   teclas: { ' ': 'B1' },
 });
 
-const PERTO = 5, LONGE = 40;      // cm: faixa da mão
+const PERTO = 5, LONGE = 25;      // cm: faixa da mão (fundo e topo da tela)
 let alvoY = 0.5, naveY = 0.5;     // 0 = em cima, 1 = embaixo
 let estado = 'parado';            // parado, jogando, fim
 let fimEm = -1e9;
