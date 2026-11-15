@@ -15,7 +15,7 @@ montarPagina({
   id: 'nave',
   tinkercad: 'https://www.tinkercad.com/things/hnOAiQ3i9ow',
   titulo: 'Nave controlada pela mão',
-  descricao: 'Passe a mão sobre o sensor ultrassônico: mão perto, a nave desce; mão longe, a nave sobe. Desvie dos asteroides e aperte o botão para atirar. A música toca no buzzer; bateu, toca o som da batida e o LED pisca branco. São 3 vidas e a cor do LED mostra quantas restam: verde, amarelo, vermelho.',
+  descricao: 'Passe a mão sobre o sensor ultrassônico: mão perto, a nave desce; mão longe, a nave sobe. Desvie dos asteroides e aperte o botão para atirar. Os tiros acabam: pegue as caixas verdes (+10). Depois de 20 segundos aparecem naves inimigas que atiram e precisam de 2 tiros. A música toca no buzzer; bateu, toca o som da batida e o LED pisca branco. São 3 vidas e a cor do LED mostra quantas restam: verde, amarelo, vermelho.',
   pecas: ['Sensor ultrassônico', 'Botão', 'Buzzer', 'LED RGB', '3 resistores 300 Ω'],
   ligacoes: [
     ['Ultrassônico Trig', '10', 'VCC no 5V, GND no GND'],
@@ -91,17 +91,32 @@ function piscarCor(letra, ms) {
   voltarCor = setTimeout(() => estado === 'jogando' && corDasVidas(), ms);
 }
 
+// Munição: começa com 10 tiros; a caixa verde que passa voando dá mais 10. Sem tiro, só dá para desviar.
+// Inimigos: a partir de 20 s aparecem naves vermelhas em zigue-zague que atiram; precisam de 2 tiros.
+const MUNICAO_INICIO = 10, MUNICAO_CAIXA = 10, MUNICAO_MAX = 30, INIMIGOS_DEPOIS_DE = 20;
+let municao = 0, caixas = [], inimigos = [], balas = [];
+
 function comecar() {
-  estado = 'jogando'; pontos = 0; vidas = 3; tempo = 0;
-  asteroides = []; tiros = []; explosoes = []; efeito = [];
+  estado = 'jogando'; pontos = 0; vidas = 3; tempo = 0; municao = MUNICAO_INICIO;
+  asteroides = []; tiros = []; explosoes = []; efeito = []; caixas = []; inimigos = []; balas = [];
   corDasVidas();
 }
 function atirar() {
   if (estado !== 'jogando') { if (performance.now() - fimEm > 1500) comecar(); return; }
+  if (municao <= 0) { som(180, 90, 0.05, 'square'); return; }  // sem munição: só um clique grave
   if (tiros.length > 4) return;
+  municao--;
   tiros.push({ x: 0.16, y: naveY });
   Arduino.enviar('t'); som(1800, 30);
   piscarCor('b', 120);
+}
+function bater(x, y) {
+  vidas--; piscar = 1; explosoes.push({ x, y, t: 0, cor: '#ff5470' });
+  piscarCor('w', 300); efeito = [...BATIDA];
+  if (vidas <= 0) {
+    estado = 'fim'; fimEm = performance.now(); recorde('nave', pontos);
+    clearTimeout(voltarCor); Arduino.enviar('p'); efeito = [...MORTE];
+  }
 }
 document.getElementById('tela').addEventListener('click', () => { if (estado !== 'jogando') comecar(); });
 
@@ -138,16 +153,50 @@ function quadro(agora) {
     }
     // asteroide bate na nave
     for (const a of asteroides) {
-      if (!a.morto && Math.hypot(a.x * W - nx, a.y - ny) < a.r + 18 * s) {
-        a.morto = true; vidas--; piscar = 1; explosoes.push({ x: nx, y: ny, t: 0, cor: '#ff5470' });
-        piscarCor('w', 300); efeito = [...BATIDA];
-        if (vidas <= 0) {
-          estado = 'fim'; fimEm = performance.now(); recorde('nave', pontos);
-          clearTimeout(voltarCor); Arduino.enviar('p'); efeito = [...MORTE];
-        }
-      }
+      if (!a.morto && estado === 'jogando' && Math.hypot(a.x * W - nx, a.y - ny) < a.r + 18 * s) { a.morto = true; bater(nx, ny); }
       if (a.x < -0.1 && !a.morto) { a.morto = true; pontos += 1; }
     }
+
+    // caixa de munição: aparece mais quando os tiros estão acabando
+    if (Math.random() < dt * (municao < 4 ? 0.25 : 0.08)) caixas.push({ x: 1.05, y: margem + Math.random() * alturaUtil, giro: 0 });
+    for (const c of caixas) {
+      c.x -= 0.22 * dt; c.giro += dt * 2;
+      if (!c.pega && Math.hypot(c.x * W - nx, c.y - ny) < 34 * s) {
+        c.pega = true; municao = Math.min(MUNICAO_MAX, municao + MUNICAO_CAIXA);
+        Arduino.enviar('a'); som(900, 60); setTimeout(() => som(1400, 90), 70);
+        explosoes.push({ x: c.x * W, y: c.y, t: 0, cor: '#3ddc84' });
+      }
+    }
+    caixas = caixas.filter(c => !c.pega && c.x > -0.1);
+
+    // inimigos: entram pela direita em zigue-zague e atiram bolinhas na direção da nave
+    if (tempo > INIMIGOS_DEPOIS_DE && inimigos.length < 3 && Math.random() < dt * (0.12 + (tempo - INIMIGOS_DEPOIS_DE) * 0.004)) {
+      inimigos.push({ x: 1.05, base: margem + (0.15 + Math.random() * 0.7) * alturaUtil, fase: Math.random() * 6, vida: 2, recarga: 1 + Math.random(), y: 0 });
+    }
+    for (const e of inimigos) {
+      e.x -= 0.1 * dt; e.fase += dt * 2;
+      e.y = e.base + Math.sin(e.fase) * 0.12 * alturaUtil;
+      e.recarga -= dt;
+      if (e.recarga <= 0 && e.x < 0.95) {
+        e.recarga = 2 + Math.random();
+        const dx = nx - e.x * W, dy = ny - e.y, n = Math.hypot(dx, dy);
+        balas.push({ x: e.x * W, y: e.y, vx: dx / n * 260 * s, vy: dy / n * 260 * s });
+        som(500, 50, 0.03, 'square');
+      }
+      for (const t of tiros) if (!t.morto && Math.hypot(t.x * W - e.x * W, margem + t.y * alturaUtil - e.y) < 26 * s) {
+        t.morto = true; e.vida--; e.atingido = 0.15;
+        if (e.vida <= 0) { e.morto = true; pontos += 30; explosoes.push({ x: e.x * W, y: e.y, t: 0, cor: '#ff5470' }); Arduino.enviar('a'); som(700, 120); }
+      }
+      if (!e.morto && estado === 'jogando' && Math.hypot(e.x * W - nx, e.y - ny) < 40 * s) { e.morto = true; bater(nx, ny); }
+      e.atingido = Math.max(0, (e.atingido || 0) - dt);
+    }
+    inimigos = inimigos.filter(e => !e.morto && e.x > -0.1);
+    for (const b of balas) {
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      if (!b.morto && estado === 'jogando' && Math.hypot(b.x - nx, b.y - ny) < 22 * s) { b.morto = true; bater(nx, ny); }
+    }
+    balas = balas.filter(b => !b.morto && b.x > -20 && b.x < W + 20 && b.y > -20 && b.y < H + 20);
+
     asteroides = asteroides.filter(a => !a.morto);
     tiros = tiros.filter(t => !t.morto && t.x < 1.1);
   }
@@ -164,6 +213,23 @@ function quadro(agora) {
   }
   ctx.fillStyle = '#4ea8ff';
   for (const t of tiros) ctx.fillRect(t.x * W, margem + t.y * alturaUtil - 2 * s, 26 * s, 4 * s);
+  // caixas de munição: quadrado verde balançando com "+10"
+  for (const c of caixas) {
+    ctx.save(); ctx.translate(c.x * W, c.y); ctx.rotate(Math.sin(c.giro) * 0.3);
+    ctx.fillStyle = '#3ddc84'; ctx.fillRect(-20 * s, -16 * s, 40 * s, 32 * s);
+    texto(ctx, `+${MUNICAO_CAIXA}`, 0, 1 * s, 18 * s, '#0b3d22');
+    ctx.restore();
+  }
+  // inimigos: nave vermelha virada para a esquerda (pisca branco quando leva tiro)
+  for (const e of inimigos) {
+    ctx.save(); ctx.translate(e.x * W, e.y);
+    ctx.fillStyle = e.atingido > 0 ? '#ffffff' : '#ff5470';
+    ctx.beginPath(); ctx.moveTo(-28 * s, 0); ctx.lineTo(20 * s, -18 * s); ctx.lineTo(12 * s, 0); ctx.lineTo(20 * s, 18 * s); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.ellipse(0, 0, 7 * s, 4 * s, 0, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+  ctx.fillStyle = '#ff8fa3';
+  for (const b of balas) { ctx.beginPath(); ctx.arc(b.x, b.y, 6 * s, 0, 7); ctx.fill(); }
 
   // nave
   piscar = Math.max(0, piscar - dt);
@@ -183,12 +249,17 @@ function quadro(agora) {
 
   texto(ctx, `${pontos}`, W / 2, 34 * s, 34 * s, '#fff');
   texto(ctx, '♥'.repeat(Math.max(0, vidas)), 24 * s, 34 * s, 30 * s, '#ff5470', 'left');
+  if (estado === 'jogando') {
+    texto(ctx, `tiros: ${municao}`, 24 * s, 66 * s, 20 * s, municao > 3 ? '#4ea8ff' : '#ffd166', 'left', 600);
+    if (municao === 0 && Math.floor(performance.now() / 400) % 2) texto(ctx, 'SEM MUNIÇÃO: desvie e pegue uma caixa verde', W / 2, H - 20 * s, 22 * s, '#ffd166', 'center', 600);
+  }
   texto(ctx, `recorde ${recorde('nave', 0)}`, W - 24 * s, 34 * s, 18 * s, '#93a1bd', 'right', 500);
   if (maoCm !== null) texto(ctx, `mão: ${maoCm} cm`, 24 * s, H - 16 * s, 18 * s, '#93a1bd', 'left', 500);
   if (estado === 'parado') {
     texto(ctx, 'NAVE', W / 2, H / 2 - 50 * s, 80 * s, '#fff');
     texto(ctx, 'Aperte o botão para começar', W / 2, H / 2 + 20 * s, 26 * s, '#ffd166', 'center', 500);
     texto(ctx, 'mão perto do sensor: desce · mão longe: sobe', W / 2, H / 2 + 60 * s, 20 * s, '#93a1bd', 'center', 500);
+    texto(ctx, 'tiros acabam: pegue as caixas verdes · naves vermelhas atiram e precisam de 2 tiros', W / 2, H / 2 + 92 * s, 18 * s, '#93a1bd', 'center', 500);
   }
   if (estado === 'fim') {
     texto(ctx, 'FIM DE JOGO', W / 2, H / 2 - 40 * s, 70 * s, '#ff5470');
