@@ -4,7 +4,7 @@
 // uma letra para acender o LED ou tocar o buzzer.
 
 const int BOTAO = 2;         // atira
-const int BOTAO_BOMBA = 3;   // bomba: destrói tudo na tela
+const int BOTAO_COMECAR = 3; // começa a partida
 const int TRIG = 10;
 const int ECHO = 11;
 const int BUZZER = 8;
@@ -14,13 +14,13 @@ const int LED_AZUL = 5;
 
 //## Memória do botão | Guarda se o botão já estava apertado, para contar um aperto só uma vez.
 bool apertadoAntes = false;
-bool bombaAntes = false;
+bool comecarAntes = false;
 
 //## setup | Roda uma vez: diz quais pinos são entrada e quais são saída e liga o Monitor Serial.
 void setup()
 {
   pinMode(BOTAO, INPUT_PULLUP);
-  pinMode(BOTAO_BOMBA, INPUT_PULLUP);
+  pinMode(BOTAO_COMECAR, INPUT_PULLUP);
   pinMode(TRIG, OUTPUT);
   pinMode(ECHO, INPUT);
   pinMode(BUZZER, OUTPUT);
@@ -44,7 +44,7 @@ void loop()
   Serial.print("D");
   Serial.println(distancia);
 
-//## Botões | No momento em que aperta, manda B1 (atirar) ou B2 (bomba) para a tela.
+//## Botões | No momento em que aperta, manda B1 (atirar) ou B2 (começar) para a tela.
   // botão: manda B1 só no momento em que aperta
   bool apertado = digitalRead(BOTAO) == LOW;
   if (apertado && !apertadoAntes) {
@@ -52,12 +52,12 @@ void loop()
   }
   apertadoAntes = apertado;
 
-  // botão da bomba: manda B2 só no momento em que aperta
-  bool bomba = digitalRead(BOTAO_BOMBA) == LOW;
-  if (bomba && !bombaAntes) {
+  // botão de começar: manda B2 só no momento em que aperta
+  bool comecar = digitalRead(BOTAO_COMECAR) == LOW;
+  if (comecar && !comecarAntes) {
     Serial.println("B2");
   }
-  bombaAntes = bomba;
+  comecarAntes = comecar;
 
 //## Ouvir a tela | Lê as letras que a tela manda e passa para a função comando.
   // letras que a tela mandou

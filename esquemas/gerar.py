@@ -78,8 +78,8 @@ def nave():
     e = base("Jogo da nave: ultrassônico, 2 botões, buzzer e LED RGB")
     ultrassonico(e, nota="(fica deitado, olhando para cima)")
     botao(e, 13, "2", 470, "Atirar")
-    botao(e, 8, "~3", 476, "Bomba", ROSA)
-    e.legenda.append((CINZA, "Botões atirar / bomba (rosa)", "pinos 2 / 3 (outro canto no - de cima)"))
+    botao(e, 8, "~3", 476, "Começar", ROSA)
+    e.legenda.append((CINZA, "Botões atirar / começar (rosa)", "pinos 2 / 3 (outro canto no - de cima)"))
     buzzer(e)
     rgb(e)
     return e

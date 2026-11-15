@@ -14,23 +14,23 @@
 montarPagina({
   id: 'nave',
   tinkercad: 'https://www.tinkercad.com/things/hnOAiQ3i9ow',
-  imagem: 'esquemas/nave.svg',  // o print do Tinkercad ainda não tem o botão da bomba
+  imagem: 'esquemas/nave.svg',  // o print do Tinkercad ainda não tem o botão de começar
   titulo: 'Nave controlada pela mão',
-  descricao: 'Passe a mão sobre o sensor ultrassônico: mão perto, a nave desce; mão longe, a nave sobe. Desvie dos asteroides e aperte o botão para atirar. Os tiros acabam: pegue as caixas verdes (+10). O segundo botão solta uma bomba que destrói tudo na tela (começa com 1; a caixa roxa dá mais uma). Depois de 20 segundos aparecem naves inimigas que atiram e precisam de 2 tiros. A música toca no buzzer; bateu, toca o som da batida e o LED pisca branco. São 3 vidas e a cor do LED mostra quantas restam: verde, amarelo, vermelho.',
+  descricao: 'Passe a mão sobre o sensor ultrassônico: mão perto, a nave desce; mão longe, a nave sobe. Aperte o botão de começar (pino 3) para iniciar a partida e o botão de tiro (pino 2) para atirar. Desvie dos asteroides. Os tiros acabam: pegue as balas verdes no caminho (+10). Depois de 20 segundos aparecem naves inimigas que atiram e precisam de 2 tiros. A música toca no buzzer; bateu, toca o som da batida e o LED pisca branco. São 3 vidas e a cor do LED mostra quantas restam: verde, amarelo, vermelho.',
   pecas: ['Sensor ultrassônico', '2 botões', 'Buzzer', 'LED RGB', '3 resistores 300 Ω'],
   ligacoes: [
     ['Ultrassônico Trig', '10', 'VCC no 5V, GND no GND'],
     ['Ultrassônico Echo', '11', ''],
     ['Botão (atirar)', '2', 'o lado oposto do botão vai no GND'],
-    ['Botão (bomba)', '3', 'o lado oposto do botão vai no GND'],
+    ['Botão (começar)', '3', 'o lado oposto do botão vai no GND'],
     ['Buzzer +', '8', 'a outra perna vai no GND'],
     ['LED RGB vermelho (R)', '7', 'com resistor de 300 Ω'],
     ['LED RGB verde (G)', '6', 'com resistor de 300 Ω'],
     ['LED RGB azul (B)', '5', 'com resistor de 300 Ω. A perna maior do LED vai no GND'],
   ],
   passosExtras: ['Deixe o sensor deitado na mesa, olhando para cima. A mão funciona entre 5 e 25 cm de altura.'],
-  teclado: 'Sem Arduino: mouse sobe e desce a nave, espaço atira, B solta a bomba',
-  teclas: { ' ': 'B1', b: 'B2' },
+  teclado: 'Sem Arduino: mouse sobe e desce a nave, espaço atira, Enter começa',
+  teclas: { ' ': 'B1', enter: 'B2' },
 });
 
 const PERTO = 5, LONGE = 25;      // cm: faixa da mão (fundo e topo da tela)
@@ -59,7 +59,7 @@ Arduino.aoReceber = linha => {
     }
   }
   if (linha === 'B1') atirar();
-  if (linha === 'B2') bomba();
+  if (linha === 'B2' && estado !== 'jogando' && performance.now() - fimEm > 1500) comecar();  // botão de começar
 };
 document.addEventListener('mousemove', e => {
   if (Arduino.escritor) return;
@@ -94,36 +94,24 @@ function piscarCor(letra, ms) {
   voltarCor = setTimeout(() => estado === 'jogando' && corDasVidas(), ms);
 }
 
-// Munição: começa com 10 tiros; a caixa verde que passa voando dá mais 10. Sem tiro, só dá para desviar.
+// Munição: começa com 10 tiros; a bala verde que passa no caminho dá mais 10. Sem tiro, só dá para desviar.
 // Inimigos: a partir de 20 s aparecem naves vermelhas em zigue-zague que atiram; precisam de 2 tiros.
 const MUNICAO_INICIO = 10, MUNICAO_CAIXA = 10, MUNICAO_MAX = 30, INIMIGOS_DEPOIS_DE = 20;
 let municao = 0, caixas = [], inimigos = [], balas = [];
-// Bomba (segundo botão, pino 3): destrói tudo o que está na tela. Começa com 1; a caixa roxa, rara, dá mais uma.
-const BOMBAS_INICIO = 1, BOMBAS_MAX = 3, EXPLOSAO = [43, 40, 38, 36, 35, 0];
-let bombas = 0, clarao = 0, W_ULTIMO = 1;  // W_ULTIMO: largura da tela no último quadro, para a bomba posicionar as explosões
 
 function comecar() {
-  estado = 'jogando'; pontos = 0; vidas = 3; tempo = 0; municao = MUNICAO_INICIO; bombas = BOMBAS_INICIO;
+  estado = 'jogando'; pontos = 0; vidas = 3; tempo = 0; municao = MUNICAO_INICIO;
   asteroides = []; tiros = []; explosoes = []; efeito = []; caixas = []; inimigos = []; balas = [];
   corDasVidas();
 }
 function atirar() {
-  if (estado !== 'jogando') { if (performance.now() - fimEm > 1500) comecar(); return; }
+  if (estado !== 'jogando') return;  // quem começa a partida é o outro botão
   if (municao <= 0) { som(180, 90, 0.05, 'square'); return; }  // sem munição: só um clique grave
   if (tiros.length > 4) return;
   municao--;
   tiros.push({ x: 0.16, y: naveY });
   Arduino.enviar('t'); som(1800, 30);
   piscarCor('b', 120);
-}
-function bomba() {
-  if (estado !== 'jogando') return;
-  if (bombas <= 0) { som(180, 90, 0.05, 'square'); return; }
-  bombas--; clarao = 1;
-  for (const a of asteroides) { a.morto = true; pontos += 10; explosoes.push({ x: a.x * W_ULTIMO, y: a.y, t: 0, cor: '#ffd166' }); }
-  for (const e of inimigos) { e.morto = true; pontos += 30; explosoes.push({ x: e.x * W_ULTIMO, y: e.y, t: 0, cor: '#ff5470' }); }
-  balas = [];
-  efeito = [...EXPLOSAO]; piscarCor('p', 500); som(90, 500, 0.08, 'sawtooth');
 }
 function bater(x, y) {
   vidas--; piscar = 1; explosoes.push({ x, y, t: 0, cor: '#ff5470' });
@@ -140,7 +128,6 @@ function quadro(agora) {
   requestAnimationFrame(quadro);
   const dt = Math.min(0.1, (agora - antes) / 1000); antes = agora;
   const { ctx, W, H, s } = prepararTela();
-  W_ULTIMO = W;
   naveY += (alvoY - naveY) * Math.min(1, dt * 6);  // desliza até a posição da mão, sem pular
 
   ctx.fillStyle = '#050813'; ctx.fillRect(0, 0, W, H);
@@ -173,18 +160,16 @@ function quadro(agora) {
       if (a.x < -0.1 && !a.morto) { a.morto = true; pontos += 1; }
     }
 
-    // caixa de munição: aparece mais quando os tiros estão acabando
+    // bala verde de munição: aparece mais quando os tiros estão acabando
     if (Math.random() < dt * (municao < 4 ? 0.25 : 0.08)) caixas.push({ x: 1.05, y: margem + Math.random() * alturaUtil, giro: 0 });
     for (const c of caixas) {
       c.x -= 0.22 * dt; c.giro += dt * 2;
-      if (!c.pega && Math.hypot(c.x * W - nx, c.y - ny) < 34 * s) {
-        c.pega = true;
-        if (c.bomba) bombas = Math.min(BOMBAS_MAX, bombas + 1); else municao = Math.min(MUNICAO_MAX, municao + MUNICAO_CAIXA);
+      if (!c.pega && Math.hypot(c.x * W - nx, c.y - ny) < 44 * s) {
+        c.pega = true; municao = Math.min(MUNICAO_MAX, municao + MUNICAO_CAIXA);
         Arduino.enviar('a'); som(900, 60); setTimeout(() => som(1400, 90), 70);
-        explosoes.push({ x: c.x * W, y: c.y, t: 0, cor: c.bomba ? '#b04dff' : '#3ddc84' });
+        explosoes.push({ x: c.x * W, y: c.y, t: 0, cor: '#3ddc84' });
       }
     }
-    if (Math.random() < dt * 0.03) caixas.push({ x: 1.05, y: margem + Math.random() * alturaUtil, giro: 0, bomba: true });
     caixas = caixas.filter(c => !c.pega && c.x > -0.1);
 
     // inimigos: entram pela direita em zigue-zague e atiram bolinhas na direção da nave
@@ -231,11 +216,14 @@ function quadro(agora) {
   }
   ctx.fillStyle = '#4ea8ff';
   for (const t of tiros) ctx.fillRect(t.x * W, margem + t.y * alturaUtil - 2 * s, 26 * s, 4 * s);
-  // caixas de munição: quadrado verde balançando com "+10"
+  // munição: bala verde grande no caminho, com "+10" em cima
   for (const c of caixas) {
-    ctx.save(); ctx.translate(c.x * W, c.y); ctx.rotate(Math.sin(c.giro) * 0.3);
-    ctx.fillStyle = c.bomba ? '#b04dff' : '#3ddc84'; ctx.fillRect(-20 * s, -16 * s, 40 * s, 32 * s);
-    texto(ctx, c.bomba ? 'B' : `+${MUNICAO_CAIXA}`, 0, 1 * s, 18 * s, c.bomba ? '#fff' : '#0b3d22');
+    ctx.save(); ctx.translate(c.x * W, c.y + Math.sin(c.giro) * 4 * s); ctx.scale(1.5, 1.5);
+    ctx.shadowColor = '#3ddc84'; ctx.shadowBlur = 14 * s;
+    ctx.fillStyle = '#3ddc84';
+    ctx.beginPath(); ctx.moveTo(-22 * s, -9 * s); ctx.lineTo(8 * s, -9 * s); ctx.quadraticCurveTo(26 * s, 0, 8 * s, 9 * s); ctx.lineTo(-22 * s, 9 * s); ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0; ctx.fillStyle = '#1f8a50'; ctx.fillRect(-22 * s, -9 * s, 7 * s, 18 * s);
+    texto(ctx, `+${MUNICAO_CAIXA}`, 0, -22 * s, 16 * s, '#3ddc84');
     ctx.restore();
   }
   // inimigos: nave vermelha virada para a esquerda (pisca branco quando leva tiro)
@@ -264,27 +252,25 @@ function quadro(agora) {
     ctx.beginPath(); ctx.arc(e.x, e.y, e.t * 140 * s, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
   }
   explosoes = explosoes.filter(e => e.t < 0.5);
-  if (clarao > 0) { ctx.fillStyle = `rgba(255,255,255,${clarao * 0.6})`; ctx.fillRect(0, 0, W, H); clarao = Math.max(0, clarao - dt * 2); }
 
   texto(ctx, `${pontos}`, W / 2, 34 * s, 34 * s, '#fff');
   texto(ctx, '♥'.repeat(Math.max(0, vidas)), 24 * s, 34 * s, 30 * s, '#ff5470', 'left');
   if (estado === 'jogando') {
     texto(ctx, `tiros: ${municao}`, 24 * s, 66 * s, 20 * s, municao > 3 ? '#4ea8ff' : '#ffd166', 'left', 600);
-    texto(ctx, `bombas: ${bombas}`, 24 * s, 92 * s, 20 * s, '#b04dff', 'left', 600);
-    if (municao === 0 && Math.floor(performance.now() / 400) % 2) texto(ctx, 'SEM MUNIÇÃO: desvie e pegue uma caixa verde', W / 2, H - 20 * s, 22 * s, '#ffd166', 'center', 600);
+    if (municao === 0 && Math.floor(performance.now() / 400) % 2) texto(ctx, 'SEM MUNIÇÃO: desvie e pegue uma bala verde', W / 2, H - 20 * s, 22 * s, '#ffd166', 'center', 600);
   }
   texto(ctx, `recorde ${recorde('nave', 0)}`, W - 24 * s, 34 * s, 18 * s, '#93a1bd', 'right', 500);
   if (maoCm !== null) texto(ctx, `mão: ${maoCm} cm`, 24 * s, H - 16 * s, 18 * s, '#93a1bd', 'left', 500);
   if (estado === 'parado') {
     texto(ctx, 'NAVE', W / 2, H / 2 - 50 * s, 80 * s, '#fff');
-    texto(ctx, 'Aperte o botão para começar', W / 2, H / 2 + 20 * s, 26 * s, '#ffd166', 'center', 500);
+    texto(ctx, 'Aperte o botão de começar', W / 2, H / 2 + 20 * s, 26 * s, '#ffd166', 'center', 500);
     texto(ctx, 'mão perto do sensor: desce · mão longe: sobe', W / 2, H / 2 + 60 * s, 20 * s, '#93a1bd', 'center', 500);
-    texto(ctx, 'tiros acabam: pegue as caixas verdes · botão 2: bomba destrói tudo · naves vermelhas precisam de 2 tiros', W / 2, H / 2 + 92 * s, 18 * s, '#93a1bd', 'center', 500);
+    texto(ctx, 'tiros acabam: pegue as balas verdes · naves vermelhas atiram e precisam de 2 tiros', W / 2, H / 2 + 92 * s, 18 * s, '#93a1bd', 'center', 500);
   }
   if (estado === 'fim') {
     texto(ctx, 'FIM DE JOGO', W / 2, H / 2 - 40 * s, 70 * s, '#ff5470');
     texto(ctx, `${pontos} pontos`, W / 2, H / 2 + 25 * s, 34 * s, '#fff');
-    texto(ctx, 'Aperte o botão para jogar de novo', W / 2, H / 2 + 75 * s, 22 * s, '#ffd166', 'center', 500);
+    texto(ctx, 'Aperte o botão de começar para jogar de novo', W / 2, H / 2 + 75 * s, 22 * s, '#ffd166', 'center', 500);
   }
 }
 requestAnimationFrame(quadro);
