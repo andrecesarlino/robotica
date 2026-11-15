@@ -53,7 +53,7 @@ FIM = [som(76, 0.15), esperar(170), som(83, 0.15), esperar(170), som(88, 0.3)]
 JOGOS = {
     'nave': programa(['cmd'], [], [
         imprimir(txt('D'), False), imprimir(dist()),
-        botao(2, 'B1'),
+        botao(2, 'B1'), botao(3, 'B2'),
         # "enquanto" lê tudo o que chegou: a cor e a nota da música podem vir juntas
         enquanto(cmp('GT', b('input_serial_available'), num(0)),
                  definir('cmd', b('input_serial_read')),
