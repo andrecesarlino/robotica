@@ -46,11 +46,11 @@ Arduino.aoReceber = linha => {
     const d = Number(linha.slice(1));
     brutas.push(d); if (brutas.length > 12) brutas.shift();
     // O sensor mede ~30 vezes por segundo e a mão anda poucos cm entre uma medida e outra. Medida que salta mais
-    // de 10 cm é o sensor errando (vê o teto, perde o eco): ignora. Se o salto durar 25 medidas (~0,8 s), a mão
+    // de 10 cm é o sensor errando (vê o teto, perde o eco): ignora. Se o salto durar 15 medidas (~0,5 s), a mão
     // foi mesmo para outro lugar e o jogo aceita. Testado com uma gravação real do sensor: nenhum pulo na nave.
     if (d >= 2) {
-      if (maoCm !== null && Math.abs(d - maoCm) > 10 && ++foraSeguidas < 25) return;
-      if (foraSeguidas >= 25) leituras = [];
+      if (maoCm !== null && Math.abs(d - maoCm) > 10 && ++foraSeguidas < 15) return;
+      if (foraSeguidas >= 15) leituras = [];
       foraSeguidas = 0;
       leituras.push(d);
       if (leituras.length > 3) leituras.shift();
